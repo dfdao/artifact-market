@@ -42,8 +42,7 @@ contract Market{
             owner: msg.sender,
             buyoutPrice: price
         });
-        
-        emit ListingUpdate(tokenID,price);
+
         DFTokens.transferFrom(msg.sender, address(this), tokenID);        
     }
 
