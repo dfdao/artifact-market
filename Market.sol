@@ -1,21 +1,13 @@
-//SPDX-License-Identifier: agpl-3.0
+//SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.4;
-
-interface IWXDAI{
-    function deposit() external payable;
-    function transfer(address to, uint256 value) external returns (bool);
-    function transferFrom(address from, address to, uint256 amount) external returns (bool);
-    function withdraw(uint256) external;
-    function balanceOf(address) external view returns (uint256);
-}
 
 interface DarkForestTokens{
     function transferFrom(address from, address to, uint256 tokenID) external;
 }
 
 
-contract Market {
+contract Market{
     
     event ListingUpdate(uint256 indexed token, uint256 indexed price);
     
@@ -24,8 +16,7 @@ contract Market {
         uint256 buyoutPrice; // buy out price, any bid greater will buy the artifact instantly
     }
 
-    IWXDAI public constant WXDAI = IWXDAI(0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d);
-    address public admin;
+    address public admin;  // The admin can change the fee and also reset the token contract after each new round
     uint256 public endDate;
     uint256 public fee;
     mapping(uint256 => Listing) public listings; // all listings 
@@ -39,7 +30,15 @@ contract Market {
         fee = _fee; // flat fee on each listing: probably set this to a couple cents?
     }
 
-    function list(uint256 tokenID, uint256 price) external {
+
+    // sendValue from openZeppelin Address library https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol
+    function sendValue(address payable recipient, uint256 amount) internal {
+        require(address(this).balance >= amount, "Address: insufficient balance");
+        (bool success, ) = recipient.call{value: amount}("");
+        require(success, "Address: unable to send value, recipient may have reverted");
+    }
+
+    function list(uint256 tokenID, uint256 price) external  {
         
         listings[tokenID] = Listing({
             owner: msg.sender,
@@ -51,7 +50,7 @@ contract Market {
     }
 
     // buying function. User input is the price they pay BEFORE fee
-    function buy(uint256 tokenID) external  {
+    function buy(uint256 tokenID) external payable  {
         Listing memory oldListing = listings[tokenID];
         
         listings[tokenID]= Listing({
@@ -60,13 +59,13 @@ contract Market {
         });
         
         emit ListingUpdate(tokenID,0);
-        require (WXDAI.transferFrom(msg.sender, address(this), value+fee));
-        require (WXDAI.transfer(oldListing.owner, oldListing.buyoutPrice));
+        sendValue(payable(address(this)), msg.value+fee);
+        sendValue(payable(oldListing.owner), oldListing.buyoutPrice);
         DFTokens.transferFrom(address(this), msg.sender, tokenID);
     }
     
     
-    function unlist (uint256 id) external{
+    function unlist (uint256 id) external {
         address holder = listings[id].owner;
         require(msg.sender == holder);
         
@@ -92,10 +91,11 @@ contract Market {
     function collectFees() external{
         require(block.timestamp>endDate,"too early");
         require(msg.sender == admin, "admin function only");
-        WXDAI.transfer(admin, WXDAI.balanceOf(address(this)) );
+        sendValue(payable(admin), address(this).balance);
     }
     
     function changeFee(uint256 newFee) external{
+        require (msg.sender == admin);
         require (fee <= 1 ether,"don't be greedy!"); // on xdai '1 ether' = 1 XDAI
         fee = newFee;
     }

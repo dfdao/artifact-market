@@ -1,12 +1,9 @@
 import {html,useState,render} from 'https://unpkg.com/htm/preact/standalone.module.js';
 const { BigNumber, utils } = await import('https://cdn.skypack.dev/ethers'); // this is really slow to import 
-const WXDAI_CONTRACT_ADDRESS = "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d";
 const SALES_CONTRACT_ADDRESS = "0x678e993a531c8Fc93Ad4aeAEf099b0C16bA7058f";
 const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
 const SALES_CONTRACT_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/8ab45590ed73a45a8e850fa09635503713395cce/MARKET_ABI.json').then(res=>res.json());
-const WXDAI_CONTRACT_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/531733e5ec6f09db3489d02fac6eeb10/raw/933c6beca511be1ae073f40d23068af2cdaf36b2/WXDAI_ABI.json').then(res=>res.json());
 const TOKENS_APPROVAL_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json').then(res=>res.json());
-const WXDAI = await df.loadContract(WXDAI_CONTRACT_ADDRESS,WXDAI_CONTRACT_ABI);
 const SALES = await df.loadContract(SALES_CONTRACT_ADDRESS,SALES_CONTRACT_ABI);
 const TOKENS = await df.loadContract(TOKENS_CONTRACT_ADDRESS,TOKENS_APPROVAL_ABI);
 const DF_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-2';
@@ -176,7 +173,7 @@ function saleRow(artifact){
           </td>
           <td>
             <div style="margin:auto">
-              price: ${prices[artifact.idDec]} WXDAI + fee
+              price: ${prices[artifact.idDec]} XDAI + fee
             </div>
             <button onClick=${buyClick}>Buy</button>
           </td>
@@ -229,35 +226,6 @@ function saleTable(){
 }
 
 
-// part where you can wrap xdai
-function wrapPart() {
-  const [value, setValue] = useState(Math.round(df.balance/2));
-    
-  function Wrap(){
-    let bignum = utils.parseEther(value.toString())
-    WXDAI.deposit({value: bignum, gasPrice: BigNumber.from(11000000000)}).then((x)=>{console.log(x); alert(`wrapped ${value}`)}).catch((e)=>{alert`tx fail ${e}`})
-  };
-
-  function Unwrap(){
-    let bignum = utils.parseEther(value.toString())
-    WXDAI.withdraw(bignum, {gasPrice: BigNumber.from(11000000000)}).then((x)=>{console.log(x); alert(`unwrapped ${value}`)}).catch((e)=>{alert`tx fail ${e}`})
-  };
-
-  const onChange = (event) => {
-    setValue(event.target.value);
-  };
-    
-    return html`
-        <div style="text-align:center">Wrap XDAI: ${value}</div>
-        <div style="text-align:center">
-          <input type='number' step="0.01" min=0 max=${df.balance}  value=${value} onChange=${onChange} />
-          <button style="float:right" onClick=${Unwrap}>unwrap</button>
-          <button style="float:right" onClick=${Wrap}>wrap</button>
-         </div>
-        `
-}
-
-
 // the main part of the app + some styling
 function App() {
 
@@ -268,7 +236,6 @@ function App() {
           td {text-align:center}
           input {border:1px solid white; border-radius:4px; background-color:#080808}
         </style>
-        <${wrapPart} />
         <${myTable} />
         <${saleTable} />
     `
@@ -286,10 +253,11 @@ class Plugin {
   async render(container) {
     this.approval = localStorage.getItem("approval");  // Using localStorage means that we only ever have to approve the contract for tokens and xdai once 
     if (this.approval != SALES_CONTRACT_ADDRESS){
-        await TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS,true).then(res=>console.log(res)).catch(e=>console.log(e));
-        await WXDAI.approve(SALES_CONTRACT_ADDRESS,utils.parseEther("100000")).then(res=>{  // 100 thousand xdai spent by one person on aritfacts seems impossibly high
-            console.log(res)
-            localStorage.setItem("approval", SALES_CONTRACT_ADDRESS)}).catch(e=>console.log(e));
+        await TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS,true).then(res=>{
+          console.log(res);
+          localStorage.setItem("approval", SALES_CONTRACT_ADDRESS);
+        }).catch(e=>console.log(e));
+
     }
     this.container=container;
     this.container.style.width="400px"
