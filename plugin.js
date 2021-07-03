@@ -1,5 +1,5 @@
 import {html,useState,render} from 'https://unpkg.com/htm/preact/standalone.module.js';
-const { BigNumber, utils } = await import('https://cdn.skypack.dev/ethers'); // this is really slow to import 
+const { BigNumber, units } = await import('https://cdn.skypack.dev/ethers'); // this is really slow to import 
 const SALES_CONTRACT_ADDRESS = "0xa954bae58FBE108795eCf188299DF885214786A1";
 const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
 const SALES_CONTRACT_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/dc20196c0f9f633a5d8056ab74d60e2fef9f6ee1/MARKET_ABI.json').then(res=>res.json());
@@ -10,6 +10,7 @@ const DF_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/darkforest-eth/dar
 const MARKET_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/zk-farts/dfartifactmarket';
 
 
+// from @darkforest-eth/types
 const godGrammar = {
     god1: [
         "c'",
@@ -61,7 +62,9 @@ function artifactNameFromArtifact(id) {
 }
 
 
-//fetch subgraph data for the tokens listed
+// fetch subgraph data for the tokens listed
+// listings: the array of all listings
+// fee: the fee (wei)
 const marketSubgraphData = await fetch(MARKET_GRAPH_URL,{
   method: 'POST',
   headers: {
@@ -75,16 +78,22 @@ const marketSubgraphData = await fetch(MARKET_GRAPH_URL,{
             tokenID
             price
         }
+        fee(id:"0"){
+          fee
+        }
       }
 `
       })
 })
 .then((response)=> response.json());
 
-// the prices of each token
+// The prices of each token. key = token, value= price
 const prices = Object.fromEntries(marketSubgraphData.data.listings.map(e=>[e.tokenID,e.price]))
+const FEE = marketSubgraphData.data.fee
 
-//fetch subgraph data for token stats
+
+// fetch subgraph data for token stats
+// returns object containing all the stats for every token owned by the current player OR the market contract
 const dfSubgraphData = await fetch(DF_GRAPH_URL,{
   method: 'POST',
   headers: {
@@ -128,7 +137,7 @@ function myRow(artifact){
     const [value, setValue] = useState(0);
     
     const onClick =()=>{
-        SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{console.log(res); alert("listed!")}).catch(e=>console.log(e))
+        SALES.list(BigNumber.from(artifact.idDec),units.parseEther(value.toString())).then(res=>{console.log(res); alert("listed!")}).catch(e=>console.log(e))
     };
     
     const capmul = artifact.energyCapMultiplier
@@ -155,7 +164,7 @@ function myRow(artifact){
 // Creates one row in the table of the stores listed artifacts
 function saleRow(artifact){ 
        
-    const buyClick = ()=>{  
+    const onClick = ()=>{  
         SALES.buy(BigNumber.from(artifact.idDec)).then(res=>{console.log(res); alert("bought!")}).catch(e=>console.log(e))
     }
 
@@ -173,9 +182,9 @@ function saleRow(artifact){
           </td>
           <td>
             <div style="margin:auto">
-              price: ${prices[artifact.idDec]} XDAI + fee
+              price: ${prices[artifact.idDec]} XDAI + ${units.formatEther(FEE)} fee
             </div>
-            <button onClick=${buyClick}>Buy</button>
+            <button onClick=${onClick}>Buy</button>
           </td>
         </tr>
       `
@@ -185,7 +194,7 @@ function saleRow(artifact){
 // Creates the table of the users withdrawn artifacts
 function myTable(){
   return html`
-    <div style="max-height:33%" overflow=scroll>
+    <div style="max-height:33%" overflow=scroll> <!-- might not work? -->
     <table>
       <caption>My Artifacts</caption>
       <thead>
@@ -208,7 +217,7 @@ function myTable(){
 // Creates the table of the stores listed artifacts
 function saleTable(){
   return html`
-    <div style="max-height:33%" overflow=scroll>
+    <div style="max-height:33%" overflow=scroll> <!-- might not work? -->
     <table>
       <caption>Store Artifacts</caption>
       <thead>
@@ -226,12 +235,12 @@ function saleTable(){
 }
 
 
-// the main part of the app + some styling
+// the main part of the app
 function App() {
 
   return (
       html`
-        <style>
+        <style> <!-- ideally all the css stuff goes here -->
           table {table-layout:fixed; width:100%; border:2px solid white;}
           td {text-align:center}
           input {border:1px solid white; border-radius:4px; background-color:#080808}
@@ -253,9 +262,9 @@ class Plugin {
   async render(container) {
     this.approval = localStorage.getItem("approval");  // Using localStorage means that we only ever have to approve the contract for tokens and xdai once 
     if (this.approval != SALES_CONTRACT_ADDRESS){
-        await TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS,true).then(res=>{
+        await TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS,true).then(res=>{ // this will approve the market for all tokens
           console.log(res);
-          localStorage.setItem("approval", SALES_CONTRACT_ADDRESS);
+          localStorage.setItem("approval", TOKENS_CONTRACT_ADDRESS); // when a new round starts the TOKENS_CONTRACT_ADDRESS needs to get edited
         }).catch(e=>console.log(e));
 
     }
