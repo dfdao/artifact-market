@@ -8,9 +8,7 @@ interface DarkForestTokens{
 
 
 contract Market{
-    
-    event ListingUpdate(uint256 indexed token, uint256 indexed price);
-    
+  
     struct Listing{
         address owner;       // who owns the listed artifact
         uint256 buyoutPrice; // buy out price, any bid greater will buy the artifact instantly
@@ -49,7 +47,7 @@ contract Market{
         DFTokens.transferFrom(msg.sender, address(this), tokenID);        
     }
 
-    // buying function. User input is the price they pay BEFORE fee
+    // buying function. User input is the price they pay AFTER fee
     function buy(uint256 tokenID) external payable  {
         Listing memory oldListing = listings[tokenID];
         
@@ -57,11 +55,8 @@ contract Market{
             owner: address(0),
             buyoutPrice: 0
         });
-        
-        emit ListingUpdate(tokenID,0);
-        sendValue(payable(address(this)), msg.value+fee);
+        require (msg.value == oldListing.buyoutPrice+fee, "wrong value");
         sendValue(payable(oldListing.owner), oldListing.buyoutPrice);
-        DFTokens.transferFrom(address(this), msg.sender, tokenID);
     }
     
     
@@ -74,7 +69,6 @@ contract Market{
             buyoutPrice: 0
         });
         
-        emit ListingUpdate(id,0);
         DFTokens.transferFrom(address(this), holder, id);
     }
 
@@ -96,7 +90,7 @@ contract Market{
     
     function changeFee(uint256 newFee) external{
         require (msg.sender == admin);
-        require (fee <= 1 ether,"don't be greedy!"); // on xdai '1 ether' = 1 XDAI
+        require (fee <= 0.5 ether,"don't be greedy!"); // on xdai '1 ether' = 1 XDAI
         fee = newFee;
     }
 
