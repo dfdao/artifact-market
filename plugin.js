@@ -261,7 +261,7 @@ class Plugin {
 
   async render(container) {
     this.approval = localStorage.getItem("approval");  // Using localStorage means that we only ever have to approve the contract for tokens and xdai once 
-    if (this.approval != SALES_CONTRACT_ADDRESS){
+    if (this.approval != TOKENS_CONTRACT_ADDRESS){
         await TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS,true).then(res=>{ // this will approve the market for all tokens
           console.log(res);
           localStorage.setItem("approval", TOKENS_CONTRACT_ADDRESS); // when a new round starts the TOKENS_CONTRACT_ADDRESS needs to get edited
