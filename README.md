@@ -5,11 +5,13 @@ Relies on [my subgraph](https://github.com/ZK-farts/DF-market-subgraph) and [the
 #  TODO (help appreciated)
 
  -  Make the smart contract better
+ -  Sortable Tables.
  - Make sure many tokens can display at once in UI
  - UI should refresh when you buy or sell a token
  - Better docs / comments
  - Maybe remake the whole frontend (its slow)  
 
-
- 
+# thoughts
+probably would be easier to just transfer xdai instead of wxdai?  
+what would I do if darkforest moves to another chain?  
 
