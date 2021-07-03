@@ -131,7 +131,7 @@ function myRow(artifact){
     const [value, setValue] = useState(0);
     
     const onClick =()=>{
-        SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>console.log(res)).catch(e=>console.log(e))
+        SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{console.log(res); alert("listed!")}).catch(e=>console.log(e))
     };
     
     const capmul = artifact.energyCapMultiplier
@@ -159,7 +159,7 @@ function myRow(artifact){
 function saleRow(artifact){ 
        
     const buyClick = ()=>{  
-        SALES.buy(BigNumber.from(artifact.idDec)).then(res=>console.log(res)).catch(e=>console.log(e))
+        SALES.buy(BigNumber.from(artifact.idDec)).then(res=>{console.log(res); alert("bought!")}).catch(e=>console.log(e))
     }
 
     const capmul = artifact.energyCapMultiplier
@@ -249,11 +249,12 @@ function wrapPart() {
     
     return html`
         <div style="text-align:center">Wrap XDAI: ${value}</div>
-          <div style="text-align:center">
+        <div style="text-align:center">
           <input type='number' step="0.01" min=0 max=${df.balance}  value=${value} onChange=${onChange} />
           <button style="float:right" onClick=${Unwrap}>unwrap</button>
           <button style="float:right" onClick=${Wrap}>wrap</button>
-        </div>`
+         </div>
+        `
 }
 
 
