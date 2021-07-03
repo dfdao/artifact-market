@@ -1,5 +1,5 @@
 import {html,useState,render} from 'https://unpkg.com/htm/preact/standalone.module.js';
-const { BigNumber, units } = await import('https://cdn.skypack.dev/ethers'); // this is really slow to import 
+const { BigNumber, utils } = await import('https://cdn.skypack.dev/ethers'); // this is really slow to import 
 const SALES_CONTRACT_ADDRESS = "0xa954bae58FBE108795eCf188299DF885214786A1";
 const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
 const SALES_CONTRACT_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/dc20196c0f9f633a5d8056ab74d60e2fef9f6ee1/MARKET_ABI.json').then(res=>res.json());
@@ -78,7 +78,8 @@ const marketSubgraphData = await fetch(MARKET_GRAPH_URL,{
             tokenID
             price
         }
-        fee(id:"0"){
+        
+        fees(first:1 orderBy:id orderDirection:desc){
           fee
         }
       }
@@ -87,10 +88,10 @@ const marketSubgraphData = await fetch(MARKET_GRAPH_URL,{
 })
 .then((response)=> response.json());
 
-// The prices of each token. key = token, value= price
-const prices = Object.fromEntries(marketSubgraphData.data.listings.map(e=>[e.tokenID,e.price]))
-const FEE = marketSubgraphData.data.fee
-
+// The prices of each token. key = token, value= price (in XDAI)
+const prices = Object.fromEntries(marketSubgraphData.data.listings.map(e=>[e.tokenID,utils.formatEther(e.price)]))
+const FEE = marketSubgraphData.data.fees
+console.log(FEE)
 
 // fetch subgraph data for token stats
 // returns object containing all the stats for every token owned by the current player OR the market contract
@@ -131,20 +132,24 @@ const dfSubgraphData = await fetch(DF_GRAPH_URL,{
 })
 .then((response)=> response.json());
 
+// function for properly formatting the artifacts stats
+function formatMultiplier(mul){
+        if (mul <100){
+            return  `-${100 -mul}%`            
+        }
+        else if (mul ==100){
+            return `+0%`
+        }
+        return html`+${mul-100}%`
+    }
 
 // Creates one row in the table of the users withdrawn artifacts
 function myRow(artifact){
     const [value, setValue] = useState(0);
     
     const onClick =()=>{
-        SALES.list(BigNumber.from(artifact.idDec),units.parseEther(value.toString())).then(res=>{console.log(res); alert("listed!")}).catch(e=>console.log(e))
+        SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{console.log(res); alert("listed!")}).catch(e=>console.log(e))
     };
-    
-    const capmul = artifact.energyCapMultiplier
-    const growmul = artifact.energyGrowthMultiplier
-    const rangemul = artifact.rangeMultiplier
-    const speedmul = artifact.speedMultiplier
-    const defmul = artifact.defenseMultiplier
     
     return html`
        <tr>
@@ -152,7 +157,9 @@ function myRow(artifact){
         <td>${artifact.rarity}</td>
         <td>${artifact.artifactType}</td>
         <td>
-          <div style="font-size:60%">${capmul} ${growmul} ${rangemul} ${speedmul} ${defmul}</div>
+          <div style="font-size:60%">
+            ${formatMultiplier(artifact.energyCapMultiplier)} ${formatMultiplier(artifact.energyGrowthMultiplier)} ${formatMultiplier(artifact.rangeMultiplier)} ${formatMultiplier(artifact.speedMultiplier)} ${formatMultiplier(artifact.defenseMultiplier)}
+          </div>
           <input type=number min=0 step=0.01 size=4></input>
           <div><button onclick=${onClick}>list</button></div>
         </td>
@@ -167,22 +174,18 @@ function saleRow(artifact){
     const onClick = ()=>{  
         SALES.buy(BigNumber.from(artifact.idDec)).then(res=>{console.log(res); alert("bought!")}).catch(e=>console.log(e))
     }
-
-    const capmul = artifact.energyCapMultiplier
-    const growmul = artifact.energyGrowthMultiplier
-    const rangemul = artifact. rangeMultiplier
-    const speedmul = artifact.speedMultiplier
-    const defmul = artifact.defenseMultiplier
-    
+      
     return html`
         <tr>
           <td>
             <div>${artifact.rarity} ${artifact.artifactType}</div>
-            <div style="font-size:55%">${capmul} ${growmul} ${rangemul} ${speedmul} ${defmul}</div>
+            <div style="font-size:55%">
+              ${formatMultiplier(artifact.energyCapMultiplier)} ${formatMultiplier(artifact.energyGrowthMultiplier)} ${formatMultiplier(artifact.rangeMultiplier)} ${formatMultiplier(artifact.speedMultiplier)} ${formatMultiplier(artifact.defenseMultiplier)}
+            </div>
           </td>
           <td>
             <div style="margin:auto">
-              price: ${prices[artifact.idDec]} XDAI + ${units.formatEther(FEE)} fee
+              price: ${prices[artifact.idDec]} XDAI + ${FEE} fee
             </div>
             <button onClick=${onClick}>Buy</button>
           </td>
