@@ -55,10 +55,13 @@ contract Market{
             buyoutPrice: 0
         });
         require (msg.value == oldListing.buyoutPrice+fee, "wrong value");
+        DFTokens.transferFrom(address(this), msg.sender, tokenID);
         sendValue(payable(oldListing.owner), oldListing.buyoutPrice);
     }
     
     
+    // Unlist a token you listed
+    // Useful if you want your tokens back
     function unlist (uint256 id) external {
         address holder = listings[id].owner;
         require(msg.sender == holder);
@@ -73,7 +76,9 @@ contract Market{
 
 
     
-    //ADMIN FUNCTIONS
+    // ADMIN FUNCTIONS
+    
+    // Change the tokens address between rounds
     function newRound(uint256 date, address tokens) external{
         require(block.timestamp>endDate,"too early");
         require(msg.sender == admin, "admin function only");
@@ -81,15 +86,17 @@ contract Market{
         DFTokens = DarkForestTokens(tokens);
     }
 
+    // Collect fees between rounds
     function collectFees() external{
         require(block.timestamp>endDate,"too early");
         require(msg.sender == admin, "admin function only");
         sendValue(payable(admin), address(this).balance);
     }
     
+    // change the fee
     function changeFee(uint256 newFee) external{
         require (msg.sender == admin);
-        require (fee <= 0.5 ether,"don't be greedy!"); // on xdai '1 ether' = 1 XDAI
+        require (fee <= 0.75 ether,"don't be greedy!"); // on xdai '1 ether' = 1 XDAI
         fee = newFee;
     }
 
