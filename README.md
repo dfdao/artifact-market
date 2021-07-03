@@ -12,7 +12,7 @@ Relies on [my subgraph](https://github.com/ZK-farts/DF-market-subgraph) and [the
  - Maybe remake the whole frontend (its slow)  
 
 # thoughts
-could remove events entirely and just use the subgraph to track calls (would save some gas for users)
+could remove events entirely and just use the subgraph to track calls (would save some gas for users)  
 probably would be easier to just transfer xdai instead of wxdai? **DONE**  
 what would I do if darkforest moves to another chain?  
 
