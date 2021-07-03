@@ -1,8 +1,8 @@
 import {html,useState,render} from 'https://unpkg.com/htm/preact/standalone.module.js';
 const { BigNumber, utils } = await import('https://cdn.skypack.dev/ethers'); // this is really slow to import 
-const SALES_CONTRACT_ADDRESS = "0x678e993a531c8Fc93Ad4aeAEf099b0C16bA7058f";
+const SALES_CONTRACT_ADDRESS = "0xa954bae58FBE108795eCf188299DF885214786A1";
 const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
-const SALES_CONTRACT_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/8ab45590ed73a45a8e850fa09635503713395cce/MARKET_ABI.json').then(res=>res.json());
+const SALES_CONTRACT_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/dc20196c0f9f633a5d8056ab74d60e2fef9f6ee1/MARKET_ABI.json').then(res=>res.json());
 const TOKENS_APPROVAL_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json').then(res=>res.json());
 const SALES = await df.loadContract(SALES_CONTRACT_ADDRESS,SALES_CONTRACT_ABI);
 const TOKENS = await df.loadContract(TOKENS_CONTRACT_ADDRESS,TOKENS_APPROVAL_ABI);
