@@ -12,6 +12,6 @@ Relies on [my subgraph](https://github.com/ZK-farts/DF-market-subgraph) and [the
  - Maybe remake the whole frontend (its slow)  
 
 # thoughts
-probably would be easier to just transfer xdai instead of wxdai?  
+probably would be easier to just transfer xdai instead of wxdai? **DONE**  
 what would I do if darkforest moves to another chain?  
 
