@@ -1,4 +1,3 @@
-import {html,useState,render} from 'https://unpkg.com/htm/preact/standalone.module.js';
 const { BigNumber, utils } = await import('https://cdn.skypack.dev/ethers'); // this is really slow to import 
 const SALES_CONTRACT_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8";
 const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
@@ -8,6 +7,34 @@ const SALES = await df.loadContract(SALES_CONTRACT_ADDRESS,SALES_CONTRACT_ABI);
 const TOKENS = await df.loadContract(TOKENS_CONTRACT_ADDRESS,TOKENS_APPROVAL_ABI);
 const DF_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-2';
 const MARKET_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/zk-farts/dfartifactmarket';
+
+/*
+    @params params: Object containing 3 entries
+        params.type: The kind of element to create (string)
+        params.css: The CSS object containing all of your styling
+        params.attributes: a Map containing all the attributes. key = attribute, value = value
+        params.text: The text of the element
+        params.eventListeners: The event listeners (onclick, onchange,)
+*/
+
+function createElement(params){
+  const element = document.createElement(params.type)
+    if (params.css!=null){
+      element.style = params.css
+    }
+    element.textContent = params.text
+    if (params.attributes != null){
+      for (const e in params.attributes){
+        element.setAttribute(e, Map.get(e))
+      }
+    }
+    if (params.eventListeners != null){
+      for (const e in params.eventListeners){
+        element.addEventListener(e,params.eventListeners[e])
+      }
+    }
+    return element
+}
 
 
 // from @darkforest-eth/types
@@ -89,7 +116,7 @@ const marketSubgraphData = await fetch(MARKET_GRAPH_URL,{
 .then((response)=> response.json());
 
 // The prices of each token. key = token, value= price (in XDAI)
-const prices = Object.fromEntries(marketSubgraphData.data.listings.map(e=>[e.tokenID,utils.formatEther(e.price)]))
+const prices = Object.fromEntries(marketSubgraphData.data.listings.map(e=>[e.tokenID,e.price]))
 const FEE = marketSubgraphData.data.fees
 console.log(FEE)
 
@@ -140,128 +167,99 @@ function formatMultiplier(mul){
         else if (mul ==100){
             return `+0%`
         }
-        return html`+${mul-100}%`
+        return `+${mul-100}%`
     }
 
 // Creates one row in the table of the users withdrawn artifacts
 function myRow(artifact){
-    const [value, setValue] = useState(0);
-    
+
     const onClick =()=>{
-        SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{console.log(res); alert("listed!")}).catch(e=>console.log(e))
+
+        //SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{console.log(res); alert("listed!")}).catch(e=>console.log(e))
     };
-
-    const onChange = (event)=>{
-      setValue(event.target.value)
-    }
     
-    return html`
-       <tr>
-        <td>${artifactNameFromArtifact(artifact.id)}</td>
-        <td>${artifact.rarity}</td>
-        <td>${artifact.artifactType}</td>
-        <td>
-          <div style="font-size:60%">
-            ${formatMultiplier(artifact.energyCapMultiplier)} ${formatMultiplier(artifact.energyGrowthMultiplier)} ${formatMultiplier(artifact.rangeMultiplier)} ${formatMultiplier(artifact.speedMultiplier)} ${formatMultiplier(artifact.defenseMultiplier)}
-          </div>
-          <input type=number min=0 step=0.01 size=4 onChange=${onChange}></input>
-          <div><button onclick=${onClick}>list</button></div>
-        </td>
-      </tr>        
-    `
-}
-/*
-    @params params: Object containing 3 entries
-        params.type: the kind of element to create (string)
-        params.css: the CSS object containing all of your styling
-        params.attributes: a Map containing all the attributes. key = attribute, value = value
+    const onChange = (event)=>{
+        console.log(event.target.value)
+      }
 
-*/
+    const row = document.createElement("tr")
+    row.appendChild(createElement({type:"td", text:artifactNameFromArtifact(artifact.id) }))
+    row.appendChild(createElement({type:"td", text:artifact.rarity }))
+    row.appendChild(createElement({type:"td", text:artifact.artifactType }))
+    row.appendChild(createElement({type:"td" }).appendChild(
+        createElement({type:"div", text:"test"})
+        ).parentNode.appendChild(
+        createElement({type:"input", eventListeners:{"change":onChange}, attributes:(new Map([[type,"number"],[min,0],[step,0.01],[size,4]]))})
+        ).parentNode.appendChild(
+        createElement({type:"button", eventListeners:{"click":onClick}, text:"List"})
+        ))
+}
+
 
 // Creates one row in the table of the stores listed artifacts
 function saleRow(artifact){ 
        
     const onClick = ()=>{  
-        SALES.buy(BigNumber.from(artifact.idDec)).then(res=>{console.log(res); alert("bought!")}).catch(e=>console.log(e))
+        //SALES.buy(BigNumber.from(artifact.idDec)).then(res=>{console.log(res); alert("bought!")}).catch(e=>console.log(e))
     }
-      
-    return html`
-        <tr>
-          <td>
-            <div>${artifact.rarity} ${artifact.artifactType}</div>
-            <div style="font-size:55%">
-              ${formatMultiplier(artifact.energyCapMultiplier)} ${formatMultiplier(artifact.energyGrowthMultiplier)} ${formatMultiplier(artifact.rangeMultiplier)} ${formatMultiplier(artifact.speedMultiplier)} ${formatMultiplier(artifact.defenseMultiplier)}
-            </div>
-          </td>
-          <td>
-            <div style="margin:auto">
-              price: ${prices[artifact.idDec]} XDAI + ${FEE} fee
-            </div>
-            <button onClick=${onClick}>Buy</button>
-          </td>
-        </tr>
-      `
+    
+    const row = document.createElement('tr')
+    row.appendChild(createElement({type:"td", text:artifactNameFromArtifact(artifact.id) })).appendChild(
+      createElement({type:"div", text:`${artifact.rarity} ${artifact.artifactType}`,})
+    ).parentNode.appendChild(
+      createElement({type:"div", text:`${formatMultiplier(artifact.energyCapMultiplier)} ${formatMultiplier(artifact.energyGrowthMultiplier)} ${formatMultiplier(artifact.rangeMultiplier)} ${formatMultiplier(artifact.speedMultiplier)} ${formatMultiplier(artifact.defenseMultiplier)}`})
+    )
+    row.appendChild(createElement({type:"td"})).appendChild(
+      createElement({type:"div", text:`price: ${prices[artifact.idDec]} XDAI + ${FEE} fee`})
+    ).parentNode.appendChild(
+      createElement({type:"button", eventListeners:{"click":onClick}, text:"Buy"})
+    )
+
+    return row
 }
 
 
 // Creates the table of the users withdrawn artifacts
 function myTable(){
-  return html`
-    <div style="max-height:33%" overflow=scroll> <!-- might not work? -->
-    <table>
-      <caption>My Artifacts</caption>
-      <thead>
-        <tr>
-          <th>Artifact </th>
-          <th>Rarity</th>
-          <th>Type</th>
-          <th>Stats</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${Object.values(dfSubgraphData.data.myartifacts).map((artifact) =>{return myRow(artifact)})}
-      </tbody>
-    </table>
-    </div>
-  `
+  
+  const div= document.createElement("div")
+  const table = div.appendChild(document.createElement("table"))
+  table.appendChild(createElement({type:"caption",text:"My Artifacts"}))
+  table.appendChild(document.createElement('thead')).appendChild(document.createElement('tr')).appendChild(
+    createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
+    createElement({type:"th", text:"Rarity"})).parentNode.appendChild(
+    createElement({type:"th", text:"Type"})).parentNode.appendChild(
+    createElement({type:"th", text:"Stats"}))
+  const body = table.appendChild(document.createElement('tbody'))
+  Object.values(dfSubgraphData.data.myartifacts).forEach(artifact=> body.appendChild(myRow(artifact)))  
+  
+  return div
 }
 
 
 // Creates the table of the stores listed artifacts
 function saleTable(){
-  return html`
-    <div style="max-height:33%" overflow=scroll> <!-- might not work? -->
-    <table>
-      <caption>Store Artifacts</caption>
-      <thead>
-        <tr>
-          <th>Artifact</th>
-          <th>Buy</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${Object.values(dfSubgraphData.data.shopartifacts).map((artifact) =>{return saleRow(artifact)})}
-      </tbody>
-    </table>
-    </div>
-  `
+  
+  const div= document.createElement("div")
+  const table = div.appendChild(document.createElement("table"))
+  table.appendChild(createElement({type:"caption",text:"Store Artifacts"}))
+  table.appendChild(document.createElement('thead')).appendChild(document.createElement('tr')).appendChild(
+    createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
+    createElement({type:"th", text:"Buy"}))
+  const body = table.appendChild(document.createElement('tbody')) 
+  Object.values(dfSubgraphData.data.shopartifacts).forEach(artifact=> body.appendChild(saleRow(artifact)))  
+  
+  return div
 }
 
 
 // the main part of the app
 function App() {
-
-  return (
-      html`
-        <style> <!-- ideally all the css stuff goes here -->
-          table {table-layout:fixed; width:100%; border:2px solid white;}
-          td {text-align:center}
-          input {border:1px solid white; border-radius:4px; background-color:#080808}
-        </style>
-        <${myTable} />
-        <${saleTable} />
-    `
-  );
+  // the css could go here
+  const div = document.createElement('div')
+  div.appendChild(myTable())
+  div.appendChild(saleTable())
+  return div
 }
 
 
@@ -269,7 +267,6 @@ function App() {
 class Plugin {
   constructor() {
     this.container=null;
-    this.root=null;
   }
 
   async render(container) {
@@ -284,11 +281,11 @@ class Plugin {
     this.container=container;
     this.container.style.width="400px"
     this.container.style.height="400px"
-    this.root = render(html`<${App} />`, container)
+    this.container.appendChild(App())
   }
 
   destroy() {
-    render(null, this.container, this.root)
+    this.container = null;
   }
 }
 
