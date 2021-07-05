@@ -8,27 +8,35 @@ const TOKENS = await df.loadContract(TOKENS_CONTRACT_ADDRESS,TOKENS_APPROVAL_ABI
 const DF_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-2';
 const MARKET_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/zk-farts/dfartifactmarket';
 
+
 /*
-    @params params: Object containing 3 entries
+  createElement function: this lets me make elements more easily
+    @params params: Object containing 5 entries :TODO maybe a Map is faster
         params.type: The kind of element to create (string)
         params.attributes: a Map containing all the attributes. key = attribute, value = value
         params.text: The text of the element
         params.eventListeners: The event listeners (onclick, onchange,)
+        parms.css: a Map containing the style parts as key and the value to assign as value
 */
 
 function createElement(params){
   const element = document.createElement(params.type)
   element.textContent = params.text
-  if (params.attributes != null){
+  if ( params.attributes !== undefined){
     for (const e of params.attributes){
       element.setAttribute(e[0], e[1])
     }
   }    
-  if (params.eventListeners != null){
+  if (params.eventListeners !== undefined){
       for (const e of params.eventListeners){
         element.addEventListener(e,params.eventListeners[e])
       }
     }
+  if (params.css !== undefined){
+    for (const e of params.css){
+      element.style[e[0]] = e[1]
+    }
+  }
   return element
 }
 
@@ -88,7 +96,8 @@ function artifactNameFromArtifact(id) {
 // fetch subgraph data for the tokens listed
 // listings: the array of all listings
 // fee: the fee (wei)
-const marketSubgraphData =  await fetch(MARKET_GRAPH_URL,{
+async function marketSubgraphData(){
+  const res = await fetch(MARKET_GRAPH_URL,{
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -108,8 +117,13 @@ const marketSubgraphData =  await fetch(MARKET_GRAPH_URL,{
       }
     `
       })
-})
-.then((response)=> response.json());
+  })
+  const text = await res.text()
+  return JSON.parse(text,()=>{
+
+  })
+}
+
 
 // The prices of each token. key = token, value= price (in XDAI)
 //const prices = Map.fromEntries(marketSubgraphData.data.listings.map(e=>[e.tokenID,e.price]))
@@ -119,7 +133,8 @@ const FEE =null
 
 // fetch subgraph data for token stats
 // returns object containing all the stats for every token owned by the current player OR the market contract
-const dfSubgraphData =  await fetch(DF_GRAPH_URL,{
+async function dfSubgraphData(){
+  const res  = await fetch(DF_GRAPH_URL,{
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -154,13 +169,18 @@ const dfSubgraphData =  await fetch(DF_GRAPH_URL,{
       }
     `
       })
-})
-.then((response)=> response.json());
+  })
+  const text = await res.text()
+  return JSON.parse(text,(key,value)=>{
+    if (typeof value === 'object' && value !== null){
+      
+    }
+  })
+}
 
-console.log(dfSubgraphData)
 
 // function for properly formatting the artifacts stats
-  function formatMultiplier(mul){
+function formatMultiplier(mul){
     if (mul ==100){
       return `+0%`
     }        
@@ -171,53 +191,61 @@ console.log(dfSubgraphData)
   }
 
 // Creates one row in the table of the users withdrawn artifacts
-  function myRow(artifact){
+function myRow(artifact){
 
-    const onClick =()=>{
-        console.log('test')
-        //SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{console.log(res); alert("listed!")}).catch(e=>console.log(e))
-    };
+    const onClick =(event)=>{
+      SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{
+        event.target.parentNode.parentNode.parentNode.parentNode.removeChild(e.target.parentNode.parentNode) 
+        alert("listed!")
+        console.log(res);
+      }).catch(e=>console.log(e))
+    }
     
     const onChange = (event)=>{
-        console.log(event.target.value)
-      }
+      console.log(event.target.value)
+    }
 
     const row = document.createElement("tr")
     row.appendChild(createElement({type:"td", text:artifactNameFromArtifact(artifact.id) }))
     row.appendChild(createElement({type:"td", text:artifact.rarity }))
     row.appendChild(createElement({type:"td", text:artifact.artifactType }))
     row.appendChild(createElement({type:"td" }).appendChild(
-        createElement({type:"div", text:"test"})
-        ).parentNode.appendChild(
-        createElement({type:"input", eventListeners:{"change":onChange}, attributes:(new Map([[type,"number"],[min,0],[step,0.01],[size,4]]))})
-        ).parentNode.appendChild(
-        createElement({type:"button", eventListeners:{"click":onClick}, text:"List"})
-        ))
+      createElement({type:"div", text:"test"})
+      ).parentNode.appendChild(
+      createElement({type:"input", eventListeners:new Map([["change",onChange]]), attributes:(new Map([["type","number"],["min",0],["step",0.01],["size",4]]))})
+      ).parentNode.appendChild(
+      createElement({type:"button", eventListeners:new Map([["click",onClick]]), text:"List"})
+    ))
 }
 
 
 // Creates one row in the table of the stores listed artifacts
 function saleRow(artifact){ 
        
-    const onClick = ()=>{  
-        //SALES.buy(BigNumber.from(artifact.idDec)).then(res=>{console.log(res); alert("bought!")}).catch(e=>console.log(e))
+    const onClick = (event)=>{  
+      SALES.buy(BigNumber.from(artifact.idDec)).then(res=>{
+        event.target.parentNode.parentNode.parentNode.removeChild(e.target.parentNode.parentNode)
+        alert("bought!")
+        console.log(res)
+      }).catch(e=>console.log(e))
     }
     
-    const row = document.createElement('tr')
-    const col1 = row.appendChild(createElement({type:"td", text:artifactNameFromArtifact(artifact.id) }))
-    col1.appendChild((createElement({type:"div", text:`${artifact.rarity} ${artifact.artifactType}`,})))
-    const stats =createElement({type:"div", text:`
+    const row = document.createElement('tr').appendChild(
+      createElement({type:"td", text:artifactNameFromArtifact(artifact.id) })).appendChild(
+        (createElement({type:"div", text:`${artifact.rarity} ${artifact.artifactType}`,}))).parentNode.appendChild(
+      createElement({type:"div", text:`
         ${formatMultiplier(artifact.energyCapMultiplier)}
         ${formatMultiplier(artifact.energyGrowthMultiplier)}
         ${formatMultiplier(artifact.rangeMultiplier)}
         ${formatMultiplier(artifact.speedMultiplier)}
-        ${formatMultiplier(artifact.defenseMultiplier)}`})
-    stats.style.fontSize = "55%"
-    col1.appendChild(stats)
+        ${formatMultiplier(artifact.defenseMultiplier)}`,
+        css: new Map([["fontSize","55%"]])})
+      )
+    
     row.appendChild(createElement({type:"td"})).appendChild(
       createElement({type:"div", text:`price: ${prices[artifact.idDec]} XDAI + ${FEE} fee`})
     ).parentNode.appendChild(
-      createElement({type:"button", eventListeners:{"click":onClick}, text:"Buy"})
+      createElement({type:"button", eventListeners:new Map([["click",onClick]]), text:"Buy"})
     )
 
     return row
@@ -228,17 +256,18 @@ function saleRow(artifact){
 function myTable(){
   
   const div= document.createElement("div")
-  const table = div.appendChild(document.createElement("table"))
-  table.style.tableLayout = "fixed"
-  table.style.width = "100%"
-  table.appendChild(createElement({type:"caption",text:"My Artifacts"}))
-  table.appendChild(document.createElement('thead')).appendChild(document.createElement('tr')).appendChild(
-    createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
-    createElement({type:"th", text:"Rarity"})).parentNode.appendChild(
-    createElement({type:"th", text:"Type"})).parentNode.appendChild(
-    createElement({type:"th", text:"Stats"}))
-  const body = table.appendChild(document.createElement('tbody'))
-  Object.values(dfSubgraphData.data.myartifacts).forEach(artifact=> body.appendChild(myRow(artifact)))  
+  div.appendChild(
+    createElement({type:"table", css:new Map([["tableLayout","fixed"],["width","100%"]])})).appendChild(
+      createElement({type:"caption",text:"My Artifacts"})).parentNode.appendChild(
+      document.createElement('thead')).appendChild(
+        document.createElement('tr')).appendChild(
+          createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
+          createElement({type:"th", text:"Rarity"})).parentNode.appendChild(
+          createElement({type:"th", text:"Type"})).parentNode.appendChild(
+          createElement({type:"th", text:"Stats"})).parentNode.parentNode.appendChild(
+      document.createElement('tbody'))
+  
+      dfSubgraphData.data.myartifacts.forEach(artifact=> body.appendChild(myRow(artifact)))  
   
   return div
 }
@@ -248,16 +277,32 @@ function myTable(){
 function saleTable(){
   
   const div= document.createElement("div")
-  const table = div.appendChild(document.createElement("table"))
-  table.style.tableLayout = "fixed"
-  table.style.width = "100%"
-  table.appendChild(createElement({type:"caption",text:"Store Artifacts"}))
-  table.appendChild(document.createElement('thead')).appendChild(document.createElement('tr')).appendChild(
-    createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
-    createElement({type:"th", text:"Buy"}))
-  const body = table.appendChild(document.createElement('tbody')) 
-  Object.values(dfSubgraphData.data.shopartifacts).forEach(artifact=> body.appendChild(saleRow(artifact)))  
+  div.appendChild(
+    createElement({type:"table", css:new Map([["tableLayout","fixed"],["width","100%"]])})).appendChild(
+      createElement({type:"caption",text:"Store Artifacts"})).parentNode.appendChild(
+      document.createElement('thead')).appendChild(
+        document.createElement('tr')).appendChild(
+          createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
+          createElement({type:"th", text:"Buy"}))
+      const body = table.appendChild(document.createElement('tbody')) 
   
+      dfSubgraphData.data.shopartifacts.forEach(artifact=> body.appendChild(saleRow(artifact)))  
+  
+  return div
+}
+
+function refreshButtons(){
+  const refreshMine = ()=>{
+
+  }
+  const refreshStore = ()=>{
+
+  }
+  const div = document.createElement("div")
+  div.appendChild(
+    createElement({type:"button", text:"refresh my artifacts", eventListeners:new Map([["click",refreshMine]]), css:new Map([["float","right"]])}))
+  div.appendChild(
+    createElement({type:"button", text:"refresh store artifacts", eventListeners:new Map([["click",refreshStore]]), css:new Map([["float","right"]])}))
   return div
 }
 
@@ -269,7 +314,7 @@ class Plugin {
 
   async render(container) {
     this.approval = localStorage.getItem("approval");  // Using localStorage means that we only ever have to approve the contract for tokens and xdai once 
-    if (this.approval != TOKENS_CONTRACT_ADDRESS){
+    if (this.approval !== TOKENS_CONTRACT_ADDRESS){
         await TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS,true).then(res=>{ // this will approve the market for all tokens
           console.log(res);
           localStorage.setItem("approval", TOKENS_CONTRACT_ADDRESS); // when a new round starts the TOKENS_CONTRACT_ADDRESS needs to get edited
@@ -279,6 +324,7 @@ class Plugin {
     this.container=container;
     this.container.style.width="400px"
     this.container.style.height="400px"
+    this.container.appendChild(refreshButtons())
     this.container.appendChild(myTable())
     this.container.appendChild(saleTable())
 
