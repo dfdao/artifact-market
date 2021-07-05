@@ -106,10 +106,7 @@ const marketSubgraphData =  await fetch(MARKET_GRAPH_URL,{
           fee
         }
       }
-    `,
-    variables: {
-
-    },
+    `
       })
 })
 .then((response)=> response.json());
@@ -131,7 +128,7 @@ const dfSubgraphData =  await fetch(DF_GRAPH_URL,{
     query: 
     ` 
       query getartifacts{
-        myartifacts: artifacts(where:{owner:$me}){
+        myartifacts: artifacts(where:{owner:"${df.account}"}){
           idDec
           id
           rarity
@@ -143,7 +140,7 @@ const dfSubgraphData =  await fetch(DF_GRAPH_URL,{
           defenseMultiplier
         }
         
-        shopartifacts: artifacts(where:{owner:$shop}){
+        shopartifacts: artifacts(where:{owner:"${SALES_CONTRACT_ADDRESS.toLowerCase()}"}){
           idDec
           id
           rarity
@@ -155,11 +152,7 @@ const dfSubgraphData =  await fetch(DF_GRAPH_URL,{
           defenseMultiplier
         }
       }
-    `,
-    variables: {
-      me: df.account,
-      shop: SALES_CONTRACT_ADDRESS.toLowerCase()
-    },
+    `
       })
 })
 .then((response)=> response.json());
