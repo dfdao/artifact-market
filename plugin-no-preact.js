@@ -11,7 +11,6 @@ const MARKET_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/zk-farts/dfart
 /*
     @params params: Object containing 3 entries
         params.type: The kind of element to create (string)
-        params.css: The CSS object containing all of your styling
         params.attributes: a Map containing all the attributes. key = attribute, value = value
         params.text: The text of the element
         params.eventListeners: The event listeners (onclick, onchange,)
@@ -19,21 +18,18 @@ const MARKET_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/zk-farts/dfart
 
 function createElement(params){
   const element = document.createElement(params.type)
-    if (params.css!=null){
-      element.style = params.css
+  element.textContent = params.text
+  if (params.attributes != null){
+    for (const e of params.attributes){
+      element.setAttribute(e[0], e[1])
     }
-    element.textContent = params.text
-    if (params.attributes != null){
-      for (const e in params.attributes){
-        element.setAttribute(e, Map.get(e))
-      }
-    }
-    if (params.eventListeners != null){
-      for (const e in params.eventListeners){
+  }    
+  if (params.eventListeners != null){
+      for (const e of params.eventListeners){
         element.addEventListener(e,params.eventListeners[e])
       }
     }
-    return element
+  return element
 }
 
 
@@ -92,7 +88,7 @@ function artifactNameFromArtifact(id) {
 // fetch subgraph data for the tokens listed
 // listings: the array of all listings
 // fee: the fee (wei)
-const marketSubgraphData = await fetch(MARKET_GRAPH_URL,{
+const marketSubgraphData =  await fetch(MARKET_GRAPH_URL,{
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -101,7 +97,7 @@ const marketSubgraphData = await fetch(MARKET_GRAPH_URL,{
     query: 
     ` 
       query getlistings{
-        listings:  listedTokens{
+        listings:  listedTokens(){
             tokenID
             price
         }
@@ -110,19 +106,23 @@ const marketSubgraphData = await fetch(MARKET_GRAPH_URL,{
           fee
         }
       }
-`
+    `,
+    variables: {
+
+    },
       })
 })
 .then((response)=> response.json());
 
 // The prices of each token. key = token, value= price (in XDAI)
-const prices = Object.fromEntries(marketSubgraphData.data.listings.map(e=>[e.tokenID,e.price]))
-const FEE = marketSubgraphData.data.fees
-console.log(FEE)
+//const prices = Map.fromEntries(marketSubgraphData.data.listings.map(e=>[e.tokenID,e.price]))
+const prices = new Object()
+const FEE =null
+//console.log(FEE)
 
 // fetch subgraph data for token stats
 // returns object containing all the stats for every token owned by the current player OR the market contract
-const dfSubgraphData = await fetch(DF_GRAPH_URL,{
+const dfSubgraphData =  await fetch(DF_GRAPH_URL,{
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ const dfSubgraphData = await fetch(DF_GRAPH_URL,{
     query: 
     ` 
       query getartifacts{
-        myartifacts: artifacts(where:{owner:"${df.account}"}){
+        myartifacts: artifacts(where:{owner:$me}){
           idDec
           id
           rarity
@@ -142,7 +142,8 @@ const dfSubgraphData = await fetch(DF_GRAPH_URL,{
           speedMultiplier
           defenseMultiplier
         }
-        shopartifacts: artifacts(where:{owner:"${SALES_CONTRACT_ADDRESS.toLowerCase()}"}){
+        
+        shopartifacts: artifacts(where:{owner:$shop}){
           idDec
           id
           rarity
@@ -154,27 +155,33 @@ const dfSubgraphData = await fetch(DF_GRAPH_URL,{
           defenseMultiplier
         }
       }
-`
+    `,
+    variables: {
+      me: df.account,
+      shop: SALES_CONTRACT_ADDRESS.toLowerCase()
+    },
       })
 })
 .then((response)=> response.json());
 
+console.log(dfSubgraphData)
+
 // function for properly formatting the artifacts stats
-function formatMultiplier(mul){
-        if (mul <100){
-            return  `-${100 -mul}%`            
-        }
-        else if (mul ==100){
-            return `+0%`
-        }
-        return `+${mul-100}%`
+  function formatMultiplier(mul){
+    if (mul ==100){
+      return `+0%`
+    }        
+    else if (mul <100){
+      return  `-${100 -mul}%`            
     }
+      return `+${mul-100}%`
+  }
 
 // Creates one row in the table of the users withdrawn artifacts
-function myRow(artifact){
+  function myRow(artifact){
 
     const onClick =()=>{
-
+        console.log('test')
         //SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{console.log(res); alert("listed!")}).catch(e=>console.log(e))
     };
     
@@ -204,11 +211,16 @@ function saleRow(artifact){
     }
     
     const row = document.createElement('tr')
-    row.appendChild(createElement({type:"td", text:artifactNameFromArtifact(artifact.id) })).appendChild(
-      createElement({type:"div", text:`${artifact.rarity} ${artifact.artifactType}`,})
-    ).parentNode.appendChild(
-      createElement({type:"div", text:`${formatMultiplier(artifact.energyCapMultiplier)} ${formatMultiplier(artifact.energyGrowthMultiplier)} ${formatMultiplier(artifact.rangeMultiplier)} ${formatMultiplier(artifact.speedMultiplier)} ${formatMultiplier(artifact.defenseMultiplier)}`})
-    )
+    const col1 = row.appendChild(createElement({type:"td", text:artifactNameFromArtifact(artifact.id) }))
+    col1.appendChild((createElement({type:"div", text:`${artifact.rarity} ${artifact.artifactType}`,})))
+    const stats =createElement({type:"div", text:`
+        ${formatMultiplier(artifact.energyCapMultiplier)}
+        ${formatMultiplier(artifact.energyGrowthMultiplier)}
+        ${formatMultiplier(artifact.rangeMultiplier)}
+        ${formatMultiplier(artifact.speedMultiplier)}
+        ${formatMultiplier(artifact.defenseMultiplier)}`})
+    stats.style.fontSize = "55%"
+    col1.appendChild(stats)
     row.appendChild(createElement({type:"td"})).appendChild(
       createElement({type:"div", text:`price: ${prices[artifact.idDec]} XDAI + ${FEE} fee`})
     ).parentNode.appendChild(
@@ -224,6 +236,8 @@ function myTable(){
   
   const div= document.createElement("div")
   const table = div.appendChild(document.createElement("table"))
+  table.style.tableLayout = "fixed"
+  table.style.width = "100%"
   table.appendChild(createElement({type:"caption",text:"My Artifacts"}))
   table.appendChild(document.createElement('thead')).appendChild(document.createElement('tr')).appendChild(
     createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
@@ -242,6 +256,8 @@ function saleTable(){
   
   const div= document.createElement("div")
   const table = div.appendChild(document.createElement("table"))
+  table.style.tableLayout = "fixed"
+  table.style.width = "100%"
   table.appendChild(createElement({type:"caption",text:"Store Artifacts"}))
   table.appendChild(document.createElement('thead')).appendChild(document.createElement('tr')).appendChild(
     createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
@@ -251,17 +267,6 @@ function saleTable(){
   
   return div
 }
-
-
-// the main part of the app
-function App() {
-  // the css could go here
-  const div = document.createElement('div')
-  div.appendChild(myTable())
-  div.appendChild(saleTable())
-  return div
-}
-
 
 
 class Plugin {
@@ -281,7 +286,9 @@ class Plugin {
     this.container=container;
     this.container.style.width="400px"
     this.container.style.height="400px"
-    this.container.appendChild(App())
+    this.container.appendChild(myTable())
+    this.container.appendChild(saleTable())
+
   }
 
   destroy() {
