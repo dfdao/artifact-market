@@ -20,15 +20,15 @@ function createElement(params){
   const element = document.createElement(params.type)
   element.textContent = params.text
   if ( params.attributes !== undefined){
-    for (const e of params.attributes){
-      element.setAttribute(e[0], e[1])
+    for (const [key,value] of params.attributes){
+      element.setAttribute(key, value)
     }
   }    
   if (params.eventListeners !== undefined){
-      for (const e of params.eventListeners){
-        element.addEventListener(e,params.eventListeners[e])
-      }
+    for (const [key,value] of params.eventListeners){
+      element.addEventListener(key,value)
     }
+  }
   if (params.css !== undefined){
     for (const e of params.css){
       element.style[e[0]] = e[1]
@@ -92,42 +92,35 @@ function artifactNameFromArtifact(id) {
 
 // fetch subgraph data for the tokens listed
 // listings: the array of all listings
-// fee: the fee (wei)
 async function marketSubgraphData(){
   const res = await fetch(MARKET_GRAPH_URL,{
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    query: 
-    ` 
-      query getlistings{
-        listings:  listedTokens(){
-            tokenID
-            price
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        query: 
+        ` 
+        query getlistings{
+            listings:  listedTokens(){
+                tokenID
+                price
+            }
         }
-        
-        fees(first:1 orderBy:id orderDirection:desc){
-          fee
-        }
-      }
-    `
-      })
+        `
+    })
   })
   return await res.json()
 }
 
 async function prices(){
-  const listings = await marketSubgraphData().prices.listings    // get the listings
-  return listings // return the prices as an array or map or something 
+  const listings = await marketSubgraphData().data.listings    // get the listings
+  const formattedListings = listings.map
+  return formattedListings // return the prices as an array or map or something 
 }
 
 // The prices of each token. key = token, value= price (in XDAI)
-//const prices = Map.fromEntries(marketSubgraphData.data.listings.map(e=>[e.tokenID,e.price]))
-const prices = new Object()
-const FEE =null
-//console.log(FEE)
+
 
 // fetch subgraph data for token stats
 // returns object containing all the stats for every token owned by the current player OR the market contract
@@ -188,7 +181,7 @@ function myRow(artifact){
 
     const onClick =(event)=>{
       SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{
-        event.target.parentNode.parentNode.parentNode.parentNode.removeChild(e.target.parentNode.parentNode) 
+        event.target.parentNode.parentNode.parentNode.parentNode.removeChild(e.target.parentNode.parentNode)  // delete the row
         alert("listed!")
         console.log(res);
       }).catch(e=>console.log(e))
@@ -217,7 +210,7 @@ function saleRow(artifact){
     
     const onClick = (event)=>{  
       SALES.buy(BigNumber.from(artifact.idDec),{value: utils.formatEther(prices[artifact.idDec])}).then(res=>{
-        event.target.parentNode.parentNode.parentNode.removeChild(e.target.parentNode.parentNode)
+        event.target.parentNode.parentNode.parentNode.removeChild(e.target.parentNode.parentNode) // delete the row
         alert("bought!")
         console.log(res)
       }).catch(e=>console.log(e))
@@ -257,12 +250,12 @@ function myTable(){
           createElement({type:"th", text:"Rarity"})).parentNode.appendChild(
           createElement({type:"th", text:"Type"})).parentNode.appendChild(
           createElement({type:"th", text:"Stats"})).
-    table.appendChild(document.createElement('tbody'))
-      for (artifact of Object.values(dfSubgraphData.data.myartifacts)){
+    const body = table.appendChild(document.createElement('tbody'))
+      for (artifact of dfSubgraphData.data.myartifacts){
         body.appendChild(myRow(artifact)) 
       } 
   
-  return div
+    return table
 }
 
 
@@ -278,28 +271,12 @@ function saleTable(){
           createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
           createElement({type:"th", text:"Buy"}))
   const body = table.appendChild(document.createElement('tbody')) 
-      for (artifact of Object.values(dfSubgraphData.data.myartifacts)){
+      for (artifact of dfSubgraphData.data.shopartifacts){
         body.appendChild(saleRow(artifact)) 
       } 
   return table
 }
 
-function refreshButtons(){
-  const refreshMine = ()=>{
-      // refresh my artifacts
-
-  }
-  const refreshStore = ()=>{
-      // refresh store artifacts
-
-  }
-  const div = document.createElement("div")
-  div.appendChild(
-    createElement({type:"button", text:"refresh my artifacts", eventListeners:new Map([["click",refreshMine]]), css:new Map([["float","right"]])}))
-  div.appendChild(
-    createElement({type:"button", text:"refresh store artifacts", eventListeners:new Map([["click",refreshStore]]), css:new Map([["float","right"]])}))
-  return div
-}
 
 
 class Plugin {
@@ -319,11 +296,21 @@ class Plugin {
         localStorage.setItem("approval", TOKENS_CONTRACT_ADDRESS); 
       }).catch(e=>console.log(e));
     }
-
+    
+    async function refresh(x){
+      this.destroy()
+      await this.render(x)
+    }
+    
     this.container=container;
     this.container.style.width="400px"
     this.container.style.height="400px"
-    this.container.appendChild(refreshButtons())
+    
+    const div = document.createElement("div")
+    div.appendChild(createElement({type:"button", text:"refresh my artifacts", eventListeners:new Map([["click",await refresh()]]), css:new Map([["float","right"]])}))  // for some reason I feel like putting an await here will fail or throw
+    this.container.appendChild(div)
+    
+    this.container.appendChild(refreshButton())
     this.container.appendChild(myTable())
     this.container.appendChild(saleTable())
 
