@@ -4,7 +4,7 @@ const SALES_CONTRACT_ABI = await fetch('https://gist.githubusercontent.com/zk-FA
 const SALES = await df.loadContract(SALES_CONTRACT_ADDRESS,SALES_CONTRACT_ABI);
 const DF_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-2';
 const MARKET_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/zk-farts/dfartifactmarket';
-
+const FEE = 5000000000000000 
 
 /*
   createElement function: this lets me make elements more easily
@@ -148,7 +148,7 @@ async function subgraphData(){
     })
   })
   const tokensObject = await tokens.json()
-  const pricesArray = await prices.json().data.listings
+  const pricesArray = (await prices.json()).data.prices
   
   // this relies on both the subgraphs working properly or else the prices will get displayed incorrectly, maybe change that?
   for (let i =0; i<pricesArray.length; i++){
@@ -174,7 +174,7 @@ function myRow(artifact){
 
     const onClick =(event)=>{
       SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{
-        event.target.parentNode.parentNode.parentNode.parentNode.removeChild(e.target.parentNode.parentNode)  // delete the row
+        event.target.parentNode.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode)  // delete the row
         alert("listed!")
         console.log(res);
       }).catch(e=>console.log(e))
@@ -202,14 +202,15 @@ function myRow(artifact){
 function saleRow(artifact){ 
     
     const onClick = (event)=>{  
-      SALES.buy(BigNumber.from(artifact.idDec),{value: utils.formatEther(prices[artifact.idDec])}).then(res=>{
-        event.target.parentNode.parentNode.parentNode.removeChild(e.target.parentNode.parentNode) // delete the row
+      SALES.buy(BigNumber.from(artifact.idDec),{value: BigNumber.from(artifact.price+FEE)}).then(res=>{
+        event.target.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode) // delete the row
         alert("bought!")
         console.log(res)
       }).catch(e=>console.log(e))
     }
     
-    const row = document.createElement('tr').appendChild(
+    const row = document.createElement('tr')
+    row.appendChild(
       createElement({type:"td", text:artifactNameFromArtifact(artifact.id) })).appendChild(
         (createElement({type:"div", text:`${artifact.rarity} ${artifact.artifactType}`,}))).parentNode.appendChild(
       createElement({type:"div", text:`
@@ -218,13 +219,13 @@ function saleRow(artifact){
         ${formatMultiplier(artifact.rangeMultiplier)}
         ${formatMultiplier(artifact.speedMultiplier)}
         ${formatMultiplier(artifact.defenseMultiplier)}`,
-        css: new Map([["fontSize","55%"]])})
+        css: new Map([["fontSize","65%"]])})
       )
     
     row.appendChild(createElement({type:"td"})).appendChild(
-      createElement({type:"div", text:`price: ${prices[artifact.idDec]} XDAI + ${FEE} fee`})
+      createElement({type:"div", text:`price: ${artifact.price} XDAI + ${utils.formatEther(FEE)} fee`})
     ).parentNode.appendChild(
-      createElement({type:"button", eventListeners:new Map([["click",onClick]]), text:"Buy"})
+      createElement({type:"button",text:"Buy", eventListeners:new Map([["click",onClick]]) })
     )
 
     return row
@@ -243,9 +244,9 @@ function myTable(data){
           createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
           createElement({type:"th", text:"Rarity"})).parentNode.appendChild(
           createElement({type:"th", text:"Type"})).parentNode.appendChild(
-          createElement({type:"th", text:"Stats"})).
+          createElement({type:"th", text:"Stats"}))
     const body = table.appendChild(document.createElement('tbody'))
-      for (artifact of data.myartifacts){
+      for (let artifact of data.myartifacts){
         body.appendChild(myRow(artifact)) 
       } 
     return table
@@ -264,7 +265,7 @@ function saleTable(data){
           createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
           createElement({type:"th", text:"Buy"}))
   const body = table.appendChild(document.createElement('tbody')) 
-      for (artifact of data.shopartifacts){
+      for (let artifact of data.shopartifacts){
         body.appendChild(saleRow(artifact)) 
       } 
   return table
@@ -279,7 +280,7 @@ class Plugin {
   }
 
   async render(container) {
-    /*
+    
     this.approval = localStorage.getItem("approval");  // Using localStorage means that we only ever have to approve the contract for tokens once 
     const data=await subgraphData()
     const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96"; // when a new round starts someone has to change this
@@ -292,22 +293,12 @@ class Plugin {
       }).catch(e=>console.log(e));
     }
  
-    async function refresh(x){
-      this.destroy()
-      await this.render(x)
-    }
-    */
     this.container=container;
     this.container.style.width="400px"
     this.container.style.height="400px"
-    /*
-    const div = document.createElement("div")
-    div.appendChild(createElement({type:"button", text:"refresh my artifacts", eventListeners:new Map([["click",await refresh()]]), css:new Map([["float","right"]])}))  // for some reason I feel like putting an await here will fail or throw
-    this.container.appendChild(div)
-   
     this.container.appendChild(myTable(data))
     this.container.appendChild(saleTable(data))
-    */
+    
 
   }
 
