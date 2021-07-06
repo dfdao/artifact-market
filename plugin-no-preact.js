@@ -1,4 +1,4 @@
-import { BigNumber, utils } from ('https://cdn.skypack.dev/ethers');
+import { BigNumber, utils } from 'https://cdn.skypack.dev/ethers';
 const SALES_CONTRACT_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8";
 const SALES_CONTRACT_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json').then(res=>res.json());
 const SALES = await df.loadContract(SALES_CONTRACT_ADDRESS,SALES_CONTRACT_ABI);
@@ -90,42 +90,10 @@ function artifactNameFromArtifact(id) {
 }
 
 
-// fetch subgraph data for the tokens listed
-// listings: the array of all listings
-async function marketSubgraphData(){
-  const res = await fetch(MARKET_GRAPH_URL,{
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        query: 
-        ` 
-        query getlistings{
-            listings:  listedTokens(){
-                tokenID
-                price
-            }
-        }
-        `
-    })
-  })
-  return await res.json()
-}
-
-async function prices(){
-  const listings = await marketSubgraphData().data.listings    // get the listings
-  const formattedListings = listings.map
-  return formattedListings // return the prices as an array or map or something 
-}
-
-// The prices of each token. key = token, value= price (in XDAI)
-
-
-// fetch subgraph data for token stats
-// returns object containing all the stats for every token owned by the current player OR the market contract
-async function dfSubgraphData(){
-  const res  = await fetch(DF_GRAPH_URL,{
+// fetch subgraph data for token stats and prices
+// returns object containing all the stats for every token owned by the current player and the market contract with prices for listed ones
+async function subgraphData(){
+  const tokens  = await fetch(DF_GRAPH_URL,{
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -146,7 +114,7 @@ async function dfSubgraphData(){
           defenseMultiplier
         }
         
-        shopartifacts: artifacts(where:{owner:"${SALES_CONTRACT_ADDRESS.toLowerCase()}"}){
+        shopartifacts: artifacts(orderBy: idDec orderDirection: asc where:{owner:"${SALES_CONTRACT_ADDRESS.toLowerCase()}"}){
           idDec
           id
           rarity
@@ -161,7 +129,32 @@ async function dfSubgraphData(){
     `
       })
   })
-  return await res.json()
+  
+  const prices = await fetch(MARKET_GRAPH_URL,{
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        query: 
+        ` 
+        query getlistings{
+            prices: listedTokens(orderBy: tokenID orderDirection: asc){
+                tokenID
+                price
+            }
+        }
+        `
+    })
+  })
+  const tokensObject = await tokens.json()
+  const pricesArray = await prices.json().data.listings
+  
+  // this relies on both the subgraphs working properly or else the prices will get displayed incorrectly, maybe change that?
+  for (let i =0; i<pricesArray.length; i++){
+    tokensObject.data.shopartifacts[i].price = pricesArray[i].price
+  }
+  return tokensObject.data
 }
 
 
@@ -239,11 +232,12 @@ function saleRow(artifact){
 
 
 // Creates the table of the users withdrawn artifacts
-function myTable(){
+function myTable(data){
   
     const table = createElement({type:"table", css:new Map([["tableLayout","fixed"],["width","100%"]])})
     table.appendChild(
-      createElement({type:"caption",text:"My Artifacts"})).parentNode.appendChild(
+      createElement({type:"caption",text:"My Artifacts"}))
+    table.appendChild(
       document.createElement('thead')).appendChild(
         document.createElement('tr')).appendChild(
           createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
@@ -251,16 +245,15 @@ function myTable(){
           createElement({type:"th", text:"Type"})).parentNode.appendChild(
           createElement({type:"th", text:"Stats"})).
     const body = table.appendChild(document.createElement('tbody'))
-      for (artifact of dfSubgraphData.data.myartifacts){
+      for (artifact of data.myartifacts){
         body.appendChild(myRow(artifact)) 
       } 
-  
     return table
 }
 
 
 // Creates the table of the stores listed artifacts
-function saleTable(){
+function saleTable(data){
   
   const table= createElement({type:"table", css:new Map([["tableLayout","fixed"],["width","100%"]])})
   table.appendChild(
@@ -271,7 +264,7 @@ function saleTable(){
           createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
           createElement({type:"th", text:"Buy"}))
   const body = table.appendChild(document.createElement('tbody')) 
-      for (artifact of dfSubgraphData.data.shopartifacts){
+      for (artifact of data.shopartifacts){
         body.appendChild(saleRow(artifact)) 
       } 
   return table
@@ -286,7 +279,9 @@ class Plugin {
   }
 
   async render(container) {
+    /*
     this.approval = localStorage.getItem("approval");  // Using localStorage means that we only ever have to approve the contract for tokens once 
+    const data=await subgraphData()
     const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96"; // when a new round starts someone has to change this
     if (this.approval !== TOKENS_CONTRACT_ADDRESS){
       const TOKENS_APPROVAL_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json').then(res=>res.json());
@@ -296,23 +291,23 @@ class Plugin {
         localStorage.setItem("approval", TOKENS_CONTRACT_ADDRESS); 
       }).catch(e=>console.log(e));
     }
-    
+ 
     async function refresh(x){
       this.destroy()
       await this.render(x)
     }
-    
+    */
     this.container=container;
     this.container.style.width="400px"
     this.container.style.height="400px"
-    
+    /*
     const div = document.createElement("div")
     div.appendChild(createElement({type:"button", text:"refresh my artifacts", eventListeners:new Map([["click",await refresh()]]), css:new Map([["float","right"]])}))  // for some reason I feel like putting an await here will fail or throw
     this.container.appendChild(div)
-    
-    this.container.appendChild(refreshButton())
-    this.container.appendChild(myTable())
-    this.container.appendChild(saleTable())
+   
+    this.container.appendChild(myTable(data))
+    this.container.appendChild(saleTable(data))
+    */
 
   }
 
