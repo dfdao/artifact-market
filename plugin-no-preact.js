@@ -1,10 +1,7 @@
-const { BigNumber, utils } = await import('https://cdn.skypack.dev/ethers'); // this is really slow to import 
+import { BigNumber, utils } from ('https://cdn.skypack.dev/ethers');
 const SALES_CONTRACT_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8";
-const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
 const SALES_CONTRACT_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json').then(res=>res.json());
-const TOKENS_APPROVAL_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json').then(res=>res.json());
 const SALES = await df.loadContract(SALES_CONTRACT_ADDRESS,SALES_CONTRACT_ABI);
-const TOKENS = await df.loadContract(TOKENS_CONTRACT_ADDRESS,TOKENS_APPROVAL_ABI);
 const DF_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-2';
 const MARKET_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/zk-farts/dfartifactmarket';
 
@@ -118,12 +115,13 @@ async function marketSubgraphData(){
     `
       })
   })
-  const text = await res.text()
-  return JSON.parse(text,()=>{
-
-  })
+  return await res.json()
 }
 
+async function prices(){
+  const listings = await marketSubgraphData().prices.listings    // get the listings
+  return listings // return the prices as an array or map or something 
+}
 
 // The prices of each token. key = token, value= price (in XDAI)
 //const prices = Map.fromEntries(marketSubgraphData.data.listings.map(e=>[e.tokenID,e.price]))
@@ -170,12 +168,7 @@ async function dfSubgraphData(){
     `
       })
   })
-  const text = await res.text()
-  return JSON.parse(text,(key,value)=>{
-    if (typeof value === 'object' && value !== null){
-      
-    }
-  })
+  return await res.json()
 }
 
 
@@ -221,9 +214,9 @@ function myRow(artifact){
 
 // Creates one row in the table of the stores listed artifacts
 function saleRow(artifact){ 
-       
+    
     const onClick = (event)=>{  
-      SALES.buy(BigNumber.from(artifact.idDec)).then(res=>{
+      SALES.buy(BigNumber.from(artifact.idDec),{value: utils.formatEther(prices[artifact.idDec])}).then(res=>{
         event.target.parentNode.parentNode.parentNode.removeChild(e.target.parentNode.parentNode)
         alert("bought!")
         console.log(res)
@@ -255,19 +248,19 @@ function saleRow(artifact){
 // Creates the table of the users withdrawn artifacts
 function myTable(){
   
-  const div= document.createElement("div")
-  div.appendChild(
-    createElement({type:"table", css:new Map([["tableLayout","fixed"],["width","100%"]])})).appendChild(
+    const table = createElement({type:"table", css:new Map([["tableLayout","fixed"],["width","100%"]])})
+    table.appendChild(
       createElement({type:"caption",text:"My Artifacts"})).parentNode.appendChild(
       document.createElement('thead')).appendChild(
         document.createElement('tr')).appendChild(
           createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
           createElement({type:"th", text:"Rarity"})).parentNode.appendChild(
           createElement({type:"th", text:"Type"})).parentNode.appendChild(
-          createElement({type:"th", text:"Stats"})).parentNode.parentNode.appendChild(
-      document.createElement('tbody'))
-  
-      dfSubgraphData.data.myartifacts.forEach(artifact=> body.appendChild(myRow(artifact)))  
+          createElement({type:"th", text:"Stats"})).
+    table.appendChild(document.createElement('tbody'))
+      for (artifact of Object.values(dfSubgraphData.data.myartifacts)){
+        body.appendChild(myRow(artifact)) 
+      } 
   
   return div
 }
@@ -276,26 +269,28 @@ function myTable(){
 // Creates the table of the stores listed artifacts
 function saleTable(){
   
-  const div= document.createElement("div")
-  div.appendChild(
-    createElement({type:"table", css:new Map([["tableLayout","fixed"],["width","100%"]])})).appendChild(
-      createElement({type:"caption",text:"Store Artifacts"})).parentNode.appendChild(
+  const table= createElement({type:"table", css:new Map([["tableLayout","fixed"],["width","100%"]])})
+  table.appendChild(
+      createElement({type:"caption",text:"Store Artifacts"}))
+  table.appendChild(
       document.createElement('thead')).appendChild(
         document.createElement('tr')).appendChild(
           createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
           createElement({type:"th", text:"Buy"}))
-      const body = table.appendChild(document.createElement('tbody')) 
-  
-      dfSubgraphData.data.shopartifacts.forEach(artifact=> body.appendChild(saleRow(artifact)))  
-  
-  return div
+  const body = table.appendChild(document.createElement('tbody')) 
+      for (artifact of Object.values(dfSubgraphData.data.myartifacts)){
+        body.appendChild(saleRow(artifact)) 
+      } 
+  return table
 }
 
 function refreshButtons(){
   const refreshMine = ()=>{
+      // refresh my artifacts
 
   }
   const refreshStore = ()=>{
+      // refresh store artifacts
 
   }
   const div = document.createElement("div")
@@ -310,17 +305,21 @@ function refreshButtons(){
 class Plugin {
   constructor() {
     this.container=null;
+    this.TOKENS = null
   }
 
   async render(container) {
-    this.approval = localStorage.getItem("approval");  // Using localStorage means that we only ever have to approve the contract for tokens and xdai once 
+    this.approval = localStorage.getItem("approval");  // Using localStorage means that we only ever have to approve the contract for tokens once 
+    const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96"; // when a new round starts someone has to change this
     if (this.approval !== TOKENS_CONTRACT_ADDRESS){
-        await TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS,true).then(res=>{ // this will approve the market for all tokens
-          console.log(res);
-          localStorage.setItem("approval", TOKENS_CONTRACT_ADDRESS); // when a new round starts the TOKENS_CONTRACT_ADDRESS needs to get edited
-        }).catch(e=>console.log(e));
-
+      const TOKENS_APPROVAL_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json').then(res=>res.json());
+      const TOKENS = await df.loadContract(TOKENS_CONTRACT_ADDRESS,TOKENS_APPROVAL_ABI);  
+      await TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS,true).then(res=>{ // this will approve the market for all tokens
+        console.log(res);
+        localStorage.setItem("approval", TOKENS_CONTRACT_ADDRESS); 
+      }).catch(e=>console.log(e));
     }
+
     this.container=container;
     this.container.style.width="400px"
     this.container.style.height="400px"
