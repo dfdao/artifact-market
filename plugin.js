@@ -16,10 +16,10 @@ const FEE = await SALES.fee()
   createElement function: this lets me make elements more easily
     @params params: Object containing at most 5 entries
         params.type: The kind of element to create (string)
-        params.attributes: a Map containing all the attributes. key = attribute, value = value
+        params.attributes: a 2d array containing all the attributes. key = attribute, value = value
         params.text: The text of the element
         params.eventListeners: The event listeners (onclick, onchange,)
-        parms.css: a Map containing the style parts as key and the value to assign as value
+        parms.css: a 2d array containing the style parts as key and the value to assign as value
 */
 function createElement(params){
   const element = document.createElement(params.type)
@@ -148,9 +148,9 @@ function myRow(artifact){
     row.appendChild(createElement({type:"td", text:formatMultiplier(artifact.speedMultiplier)}))
     row.appendChild(createElement({type:"td", text:formatMultiplier(artifact.defenseMultiplier)}))
     row.appendChild(createElement({type:"td" })).appendChild(document.createElement("div")).appendChild(
-      createElement({type:"input", eventListeners:new Map([["change",onChange]]), attributes:(new Map([["type","number"],["min",0],["step",0.01],["size",4]]))})
+      createElement({type:"input", eventListeners:[["change",onChange]], attributes:[["type","number"],["min",0],["step",0.01],["size",4]]})
       ).parentNode.appendChild(
-      createElement({type:"button", eventListeners:new Map([["click",onClick]]), text:"List"}))
+      createElement({type:"button", eventListeners:[["click",onClick]], text:"List"}))
     
   return row
 }
@@ -174,9 +174,9 @@ function saleRow(artifact){
     row.appendChild(createElement({type:"td", text:formatMultiplier(artifact.speedMultiplier)}))
     row.appendChild(createElement({type:"td", text:formatMultiplier(artifact.defenseMultiplier)}))
     row.appendChild(createElement({type:"td"})).appendChild(
-      createElement({type:"div", text:`price: ${utils.formatEther(artifact.price)} XDAI + ${utils.formatEther(FEE)} fee`, css:new Map([["fontSize","70%"]])})
+      createElement({type:"div", text:`price: ${utils.formatEther(artifact.price)} XDAI + ${utils.formatEther(FEE)} fee`, css:[["fontSize","70%"]]})
     ).parentNode.appendChild(
-      createElement({type:"button",text:"Buy", eventListeners:new Map([["click",onClick]]) })
+      createElement({type:"button",text:"Buy", eventListeners:[["click",onClick]] })
     )
 
     return row
@@ -247,8 +247,8 @@ async function specialButtons(container, plugin){
     
   }
   const div = document.createElement('div')
-  div.appendChild(createElement({type:"button", text:"approve", eventListeners:new Map([["click",approve]])}))
-  div.appendChild(createElement({type:"button", text:"refresh", eventListeners:new Map([["click",refresh]])}))  
+  div.appendChild(createElement({type:"button", text:"approve", eventListeners:[["click",approve]]}))
+  div.appendChild(createElement({type:"button", text:"refresh", eventListeners:[["click",refresh]]}))  
   return div
 }
 
