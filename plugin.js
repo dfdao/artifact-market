@@ -7,7 +7,7 @@ const MARKET_GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/zk-farts/dfart
 const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96"; // when a new round starts someone has to change this
 const TOKENS_APPROVAL_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json').then(res=>res.json());
 const TOKENS = await df.loadContract(TOKENS_CONTRACT_ADDRESS,TOKENS_APPROVAL_ABI);  
-const FEE = 5000000000000000 
+const FEE = "5000000000000000" 
 
 /*
   createElement function: this lets me make elements more easily
@@ -39,57 +39,6 @@ function createElement(params){
   return element
 }
 
-
-// from @darkforest-eth/types
-const godGrammar = {
-    god1: [
-        "c'",
-        'za',
-        "ry'",
-        "ab'",
-        "bak'",
-        "dt'",
-        "ek'",
-        "fah'",
-        "q'",
-        'qo',
-        'van',
-        'bow',
-        'gui',
-        'si',
-    ],
-    god2: [
-        'thun',
-        'tchalla',
-        'thovo',
-        'saron',
-        'zoth',
-        'sharrj',
-        'thulu',
-        'ra',
-        'wer',
-        'doin',
-        'renstad',
-        'nevere',
-        'goth',
-        'anton',
-        'layton',
-    ],
-};
-/**
- * Deterministically generates the name of the artifact from its ID.
- *
- * @param artifact The artifact to generate a name for
- */
- 
-function artifactNameFromArtifact(id) {
-    const idNum = parseInt(id, 16);
-    const roll1 = (idNum % 7919) % godGrammar.god1.length; // 7919 is a big prime
-    const roll2 = (idNum % 7883) % godGrammar.god2.length; // 7883 is a big prime
-    const name = godGrammar.god1[roll1] + godGrammar.god2[roll2];
-    const nameCapitalized = name.charAt(0).toUpperCase() + name.slice(1);
-    return nameCapitalized;
-}
 
 
 // fetch subgraph data for token stats and prices
@@ -173,30 +122,33 @@ function formatMultiplier(mul){
 
 // Creates one row in the table of the users withdrawn artifacts
 function myRow(artifact){
-
+    let value;
     const onClick =(event)=>{
-      SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(res=>{
-        event.target.parentNode.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode)  // delete the row
+      SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(()=>{
+        event.target.parentNode.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode.parentNode)  // delete the row
         alert("listed!")
-        console.log(res);
       }).catch(e=>console.log(e))
     }
     
     const onChange = (event)=>{
-      console.log(event.target.value)
+       value = event.target.value
     }
 
     const row = document.createElement("tr")
-    row.appendChild(createElement({type:"td", text:artifactNameFromArtifact(artifact.id) }))
-    row.appendChild(createElement({type:"td", text:artifact.rarity }))
-    row.appendChild(createElement({type:"td", text:artifact.artifactType }))
-    row.appendChild(createElement({type:"td" }).appendChild(
-      document.createElement("div")
-      ).appendChild(
-      createElement({type:"input", eventListeners:new Map([["change",onChange]]), attributes:(new Map([["type","number"],["min",0],["step",0.01],["size",4]]))})
+    row.appendChild(createElement({type:"td", text:`${artifact.rarity} ${artifact.artifactType}` }))
+    row.appendChild(createElement({type:"td"})).appendChild(
+      createElement({type:"div", text:`
+        ${formatMultiplier(artifact.energyCapMultiplier)}
+        ${formatMultiplier(artifact.energyGrowthMultiplier)}
+        ${formatMultiplier(artifact.rangeMultiplier)}
+        ${formatMultiplier(artifact.speedMultiplier)}
+        ${formatMultiplier(artifact.defenseMultiplier)}`,
+        css: new Map([["fontSize","65%"]])})
+      )
+    row.appendChild(createElement({type:"td" })).appendChild(document.createElement("div")).appendChild(
+      createElement({type:"input", eventListeners:new Map([["change",onChange]]), css:new Map([["border","1px solid white"],["backgroundColor","#080808"]]), attributes:(new Map([["type","number"],["min",0],["step",0.01],["size",4]]))})
       ).parentNode.appendChild(
-      createElement({type:"button", eventListeners:new Map([["click",onClick]]), text:"List"})
-    ))
+      createElement({type:"button", eventListeners:new Map([["click",onClick]]), text:"List"}))
     
   return row
 }
@@ -206,10 +158,9 @@ function myRow(artifact){
 function saleRow(artifact){ 
     
     const onClick = (event)=>{  
-      SALES.buy(BigNumber.from(artifact.idDec),{value: BigNumber.from(artifact.price+FEE)}).then(res=>{
+      SALES.buy(BigNumber.from(artifact.idDec),{value: BigNumber.from(artifact.price).add(BigNumber.from(FEE))}).then(()=>{
         event.target.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode) // delete the row
         alert("bought!")
-        console.log(res)
       }).catch(e=>console.log(e))
     }
     
@@ -227,7 +178,7 @@ function saleRow(artifact){
       )
     
     row.appendChild(createElement({type:"td"})).appendChild(
-      createElement({type:"div", text:`price: ${artifact.price} XDAI + ${utils.formatEther(FEE)} fee`})
+      createElement({type:"div", text:`price: ${utils.formatEther(artifact.price)} XDAI + ${utils.formatEther(FEE)} fee`})
     ).parentNode.appendChild(
       createElement({type:"button",text:"Buy", eventListeners:new Map([["click",onClick]]) })
     )
@@ -246,9 +197,8 @@ function myTable(data){
       document.createElement('thead')).appendChild(
         document.createElement('tr')).appendChild(
           createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
-          createElement({type:"th", text:"Rarity"})).parentNode.appendChild(
-          createElement({type:"th", text:"Type"})).parentNode.appendChild(
-          createElement({type:"th", text:"Stats"}))
+          createElement({type:"th", text:"Stats"})).parentNode.appendChild(
+          createElement({type:"th", text:"List"}))
     if (data !== null){
       const body = table.appendChild(document.createElement('tbody'))
       for (let artifact of data.myartifacts){
@@ -269,6 +219,7 @@ function saleTable(data){
       document.createElement('thead')).appendChild(
         document.createElement('tr')).appendChild(
           createElement({type:"th", text:"Artifact"})).parentNode.appendChild(
+          createElement({type:"th", text:"Stats"})).parentNode.appendChild(
           createElement({type:"th", text:"Buy"}))
   if (data !== null){
     const body = table.appendChild(document.createElement('tbody'))
@@ -280,6 +231,7 @@ function saleTable(data){
 }
 
 // special buttons for approving the contract and if I can figure out refreshing it goes here too
+// I assume that re-rendering the whole thing would be async 
 async function specialButtons(){
   const approve = ()=> {
     TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS,true).catch(e=>console.log(e)) // this will approve the market for all tokens
@@ -301,7 +253,7 @@ class Plugin {
     this.container=container;
     this.container.style.width="400px"
     this.container.style.height="400px"
-    //this.container.appendChild(await specialButtons())
+    this.container.appendChild(await specialButtons())
     this.container.appendChild(myTable(data))
     this.container.appendChild(saleTable(data))
 
