@@ -107,8 +107,11 @@ async function subgraphData(){
     })
   })
   
-  const dfData = await dfSubgraphData.json().data
-  const storeData  = await storeSubgraphData.json().data
+  const dfDatajson = await dfSubgraphData.json()
+  const dfData = dfDatajson.data
+  console.log(dfDatajson)
+  const storeDatajson  = await storeSubgraphData.json()
+  const storeData = storeDatajson.data
 
   let myMap = new Map()
   for( let e of dfData.myartifacts){ 
@@ -124,15 +127,15 @@ async function subgraphData(){
   dfData.shopartifacts = storeMap  
   
   for( let e of storeData.othertokens){
-    dfData.mylistedartifacts.remove(e.tokenID)  // remove from my listed since it is does not belong to the user
+    dfData.mylistedartifacts.delete(e.tokenID)  // remove from my listed since it is does not belong to the user
     dfData.shopartifacts.get(e.tokenID)["price"] = e.price
   }
   
   for( let e of storeData.mytokens){
-    dfData.shopartifacts.remove(e.tokenID) // remove from other tokens since it belongs to the user
+    dfData.shopartifacts.delete(e.tokenID) // remove from other tokens since it belongs to the user
     dfData.mylistedartifacts.get(e.tokenID)["price"] = e.price
   }
-  
+
   return dfData
 }
 
@@ -247,7 +250,7 @@ function myTable(data){
           createElement({type:"th", text:"Speed"})).parentNode.appendChild(
           createElement({type:"th", text:"Defense"})).parentNode.appendChild(
           createElement({type:"th", text:"List"}))
-    )
+    
     
     if (data !== null){    
       const footer = table.appendChild(document.createElement('tfoot'))
@@ -258,8 +261,8 @@ function myTable(data){
       for (let artifact of data.myartifacts){
         body.appendChild(myRow(artifact)) 
       }
-      for (let artifact of data.___){
-        footer.appendChild
+      for (let artifact of data.mylistedartifacts){
+        footer.appendChild(myListedRow(artifact))
       }
       
     }
