@@ -48,7 +48,7 @@ function createElement(params){
 async function subgraphData(){
     
   // gets from df subgraph
-  const tokens  = await fetch(DF_GRAPH_URL,{
+  const dfSubgraphData  = await fetch(DF_GRAPH_URL,{
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ async function subgraphData(){
   })
 
   // gets from shop subgraph
-  const prices = await fetch(MARKET_GRAPH_URL,{
+  const storeSubgraphData = await fetch(MARKET_GRAPH_URL,{
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
@@ -95,23 +95,45 @@ async function subgraphData(){
         query: 
         ` 
         query getlistings{
-            prices: listedTokens(orderBy: tokenID orderDirection: asc){
+            othertokens: listedTokens(orderBy: tokenID orderDirection: asc where:{owner_not: "${df.account}"}){
                 tokenID
                 price
+            }
+            mytokens: listedTokens(orderBy: tokenID orderDirection: asc where:{owner: "${df.account}"}){
+                tokenID
             }
         }
         `
     })
   })
   
-  const tokensObject = await tokens.json()
-  const pricesArray = (await prices.json()).data.prices
-  
-  // this relies on both the subgraphs working properly or else the prices will get displayed incorrectly, maybe change that?
-  for (let i =0; i<pricesArray.length; i++){
-    tokensObject.data.shopartifacts[i].price = pricesArray[i].price
+  const dfData = await dfSubgraphData.json().data
+  const storeData  = await storeSubgraphData.json().data
+
+  let myMap = new Map()
+  for( let e of dfData.myartifacts){ 
+    myMap.set(e.idDec,e)
   }
-  return tokensObject.data
+  dfData.myartifacts = myMap
+  dfData.mylistedartifacts = myMap
+  
+  let storeMap = new Map()
+  for( let e of dfData.shopartifacts){ 
+    storeMap.set(e.idDec,e)
+  }
+  dfData.shopartifacts = storeMap  
+  
+  for( let e of storeData.othertokens){
+    dfData.mylistedartifacts.remove(e.tokenID)  // remove from my listed since it is does not belong to the user
+    dfData.shopartifacts.get(e.tokenID)["price"] = e.price
+  }
+  
+  for( let e of storeData.mytokens){
+    dfData.shopartifacts.remove(e.tokenID) // remove from other tokens since it belongs to the user
+    dfData.mylistedartifacts.get(e.tokenID)["price"] = e.price
+  }
+  
+  return dfData
 }
 
 
@@ -126,8 +148,34 @@ function formatMultiplier(mul){
       return  `-${100 -mul}%`
   }
 
+
+
+function myListedRow(artifact){
+    
+    const onClick = (event)=>{
+      SALES.unlist(BigNumber.from(artifact.idDec)).then(()=>{
+        event.target.parentNode.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode.parentNode)  // delete the row
+        alert("unlisted!")
+      }).catch(e=>console.log(e))
+    }
+
+    const row = document.createElement('tr')
+    row.appendChild(createElement({type:"td", text:`${artifact.rarity} ${artifact.artifactType}` }))
+    row.appendChild(createElement({type:"td", text:formatMultiplier(artifact.energyCapMultiplier)}))
+    row.appendChild(createElement({type:"td", text:formatMultiplier(artifact.energyGrowthMultiplier)}))
+    row.appendChild(createElement({type:"td", text:formatMultiplier(artifact.rangeMultiplier)}))
+    row.appendChild(createElement({type:"td", text:formatMultiplier(artifact.speedMultiplier)}))
+    row.appendChild(createElement({type:"td", text:formatMultiplier(artifact.defenseMultiplier)}))
+    row.appendChild(createElement({type:"td"})).appendChild(
+      createElement({type:"button",text:"Unlist", eventListeners:[["click",onClick]] })
+    )    
+   return row
+}
+
+
 // Creates one row in the table of the users withdrawn artifacts
 function myRow(artifact){
+    
     let value;
     const onClick =(event)=>{
       SALES.list(BigNumber.from(artifact.idDec),utils.parseEther(value.toString())).then(()=>{
@@ -199,11 +247,21 @@ function myTable(data){
           createElement({type:"th", text:"Speed"})).parentNode.appendChild(
           createElement({type:"th", text:"Defense"})).parentNode.appendChild(
           createElement({type:"th", text:"List"}))
-    if (data !== null){
+    )
+    
+    if (data !== null){    
+      const footer = table.appendChild(document.createElement('tfoot'))
+      footer.appendChild(document.createElement("tr")).appendChild(
+       createElement({type:"th", text:"My listings"}))
+
       const body = table.appendChild(document.createElement('tbody'))
       for (let artifact of data.myartifacts){
         body.appendChild(myRow(artifact)) 
-      } 
+      }
+      for (let artifact of data.___){
+        footer.appendChild
+      }
+      
     }
     return table
 }
