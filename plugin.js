@@ -11,7 +11,6 @@ const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96"; //
 const TOKENS_APPROVAL_ABI = await fetch('https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json').then(res=>res.json());
 const TOKENS = await df.loadContract(TOKENS_CONTRACT_ADDRESS,TOKENS_APPROVAL_ABI);  
 const FEE = await SALES.fee() 
-
 /*
   createElement function: this lets me make elements more easily
     @params params: Object containing at most 5 entries
@@ -46,7 +45,30 @@ function createElement(params){
 
 // fetch subgraph data for token stats and prices
 async function subgraphData(){
-    
+
+  // gets from shop subgraph
+  const storeSubgraphData = await fetch(MARKET_GRAPH_URL,{
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        query: 
+        ` 
+        query getlistings{
+            othertokens: listedTokens( where:{owner_not: "${df.account}"}){
+                tokenID
+                price
+            }
+            mytokens: listedTokens( where:{owner: "${df.account}"}){
+                tokenID
+            }
+        }
+        `
+    })
+  })
+
+
   // gets from df subgraph
   const dfSubgraphData  = await fetch(DF_GRAPH_URL,{
   method: 'POST',
@@ -69,7 +91,7 @@ async function subgraphData(){
           defenseMultiplier
         }
         
-        shopartifacts: artifacts(orderBy: idDec orderDirection: asc where:{owner:"${SALES_CONTRACT_ADDRESS.toLowerCase()}"}){
+        shopartifacts: artifacts(where:{owner:"${SALES_CONTRACT_ADDRESS.toLowerCase()}"}){
           idDec
           id
           rarity
@@ -85,57 +107,23 @@ async function subgraphData(){
       })
   })
 
-  // gets from shop subgraph
-  const storeSubgraphData = await fetch(MARKET_GRAPH_URL,{
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        query: 
-        ` 
-        query getlistings{
-            othertokens: listedTokens(orderBy: tokenID orderDirection: asc where:{owner_not: "${df.account}"}){
-                tokenID
-                price
-            }
-            mytokens: listedTokens(orderBy: tokenID orderDirection: asc where:{owner: "${df.account}"}){
-                tokenID
-            }
-        }
-        `
-    })
-  })
-  
   const dfDatajson = await dfSubgraphData.json()
   const dfData = dfDatajson.data
-  console.log(dfDatajson)
   const storeDatajson  = await storeSubgraphData.json()
   const storeData = storeDatajson.data
-
-  let myMap = new Map()
-  for( let e of dfData.myartifacts){ 
-    myMap.set(e.idDec,e)
-  }
-  dfData.myartifacts = myMap
-  dfData.mylistedartifacts = myMap
+  const myListedTokenArray = storeData.mytokens.map(e=>e.tokenID)
   
-  let storeMap = new Map()
-  for( let e of dfData.shopartifacts){ 
-    storeMap.set(e.idDec,e)
-  }
-  dfData.shopartifacts = storeMap  
+  dfData.mylistedartifacts = dfData.shopartifacts.filter((token)=>{
+      return myListedTokenArray.includes(token.idDec)
+  })
+  dfData.shopartifacts = dfData.shopartifacts.filter((token)=>{return !(myListedTokenArray.includes(token.idDec))})
   
-  for( let e of storeData.othertokens){
-    dfData.mylistedartifacts.delete(e.tokenID)  // remove from my listed since it is does not belong to the user
-    dfData.shopartifacts.get(e.tokenID)["price"] = e.price
+  // I need to make sure they are sorted the same way or else this won't work
+  for (let i; i<storeData.othertokens; i++){
+      dfData.shopartifacts[i].price = storeData.othertokens[i].price
   }
   
-  for( let e of storeData.mytokens){
-    dfData.shopartifacts.delete(e.tokenID) // remove from other tokens since it belongs to the user
-    dfData.mylistedartifacts.get(e.tokenID)["price"] = e.price
-  }
-
+  
   return dfData
 }
 
@@ -211,12 +199,11 @@ function myRow(artifact){
 function saleRow(artifact){ 
     
     const onClick = (event)=>{  
-      SALES.buy(BigNumber.from(artifact.idDec),{value: BigNumber.from(artifact.price).add(BigNumber.from(FEE))}).then(()=>{
+      SALES.buy(BigNumber.from(artifact.idDec),{value: BigNumber.from(artifact.price).add(FEE)}).then(()=>{
         event.target.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode) // delete the row
         alert("bought!")
       }).catch(e=>console.log(e))
     }
-    
     const row = document.createElement('tr')
     row.appendChild(createElement({type:"td", text:`${artifact.rarity} ${artifact.artifactType}` }))
     row.appendChild(createElement({type:"td", text:formatMultiplier(artifact.energyCapMultiplier)}))
@@ -255,14 +242,14 @@ function myTable(data){
     if (data !== null){    
       const footer = table.appendChild(document.createElement('tfoot'))
       footer.appendChild(document.createElement("tr")).appendChild(
-       createElement({type:"th", text:"My listings"}))
+        createElement({type:"th", text:"My listings", attributes:[["colspan",7]]}))
 
       const body = table.appendChild(document.createElement('tbody'))
       for (let artifact of data.myartifacts){
-        body.appendChild(myRow(artifact)) 
+         body.appendChild(myRow(artifact)) 
       }
       for (let artifact of data.mylistedartifacts){
-        footer.appendChild(myListedRow(artifact))
+         footer.appendChild(myListedRow(artifact))
       }
       
     }
@@ -331,6 +318,7 @@ class Plugin {
 
   async render(container) {
     const data=await subgraphData()
+    console.log(data)
     this.container=container;
     this.container.style.width="500px"
     this.container.appendChild(await specialButtons(container,this))
