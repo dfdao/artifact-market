@@ -5,6 +5,11 @@ import {
   useState,
   useEffect,
 } from "https://unpkg.com/htm/preact/standalone.module.js";
+import {
+  ArtifactRarity,
+  ArtifactType,
+  ArtifactTypeNames,
+} from "http://cdn.skypack.dev/@darkforest_eth/types";
 
 const DF_GRAPH_URL =
   "https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-2";
@@ -26,6 +31,25 @@ const TOKENS = await df.loadContract(
   TOKENS_CONTRACT_ADDRESS,
   TOKENS_APPROVAL_ABI
 );
+
+// Dark Forest Helpers - ideally these would be imported from cdn
+
+const Colors = {
+  green: "#00dc82",
+  red: "#ff6492",
+  muted: "#838383",
+};
+
+// https://github.com/darkforest-eth/client/blob/00492e06b8acf378e7dacc1c02b8ede61481bba3/src/Frontend/Styles/Colors.tsx
+const RarityColors = {
+  [ArtifactRarity.Unknown]: "#000000",
+  [ArtifactRarity.Common]: Colors.muted,
+  [ArtifactRarity.Rare]: "#6b68ff",
+  [ArtifactRarity.Epic]: "#c13cff",
+  [ArtifactRarity.Legendary]: "#f8b73e",
+  [ArtifactRarity.Mythic]: "#ff44b7",
+};
+
 class Plugin {
   constructor() {
     this.container = null;
@@ -42,6 +66,22 @@ class Plugin {
   destroy() {
     render(null, this.container);
   }
+}
+
+// convert key to match df format, return color
+function rarityColor(key) {
+  const rarity = key[0] + key.toLowerCase().slice(1, key.length); // COMMON => Common
+  const rarityId = ArtifactRarity[rarity];
+  return RarityColors[rarityId];
+}
+
+// convert uppercase artifactType to properly formatted name
+function artifactName(name) {
+  const typeID = Object.keys(ArtifactType).find(
+    (key) => key.toUpperCase() === name
+  );
+  const artifactId = ArtifactType[typeID];
+  return ArtifactTypeNames[artifactId];
 }
 
 function App() {
@@ -74,16 +114,19 @@ function Market() {
       <${Artifacts}
         title="Your Artifacts"
         empty="You don't currently have any artifacts."
+        action="List"
         artifacts=${data.artifactsOwned}
       />
       <${Artifacts}
         title="Your Listed Artifacts"
-        empty="You don't currently have any listed artifacts."
+        empty="You don't currently have any artifacts listed."
         artifacts=${data.artifactsListed}
       />
       <${Artifacts}
         title="Artifacts For Sale"
         empty="There aren't currently any artifacts listed for sale."
+        action="Buy"
+        price="1.0"
         artifacts=${data.artifactsForSale}
       />
     </div>
@@ -119,38 +162,121 @@ function Loading() {
   `;
 }
 
-function Artifacts({ title, empty, artifacts = [] }) {
+function Artifacts({ title, empty, artifacts = [], price, action }) {
+  const artifactsStyle = {
+    display: "grid",
+    gridRowGap: "4px",
+  };
+
+  const emptyStyle = {
+    color: "#838383",
+  };
+
   const artifactsChildren = artifacts.length
     ? artifacts.map(
         (artifact) =>
-          html`<${Artifact} key=${artifact.id} artifact=${artifact} />`
+          html`<${Artifact}
+            key=${artifact.id}
+            artifact=${artifact}
+            price=${price}
+            action=${action}
+          />`
       )
-    : html`<p>${empty}</p>`;
+    : html`<p style=${emptyStyle}>${empty}</p>`;
 
   return html`
     <div>
       <h1>${title}</h1>
-      <div>${artifactsChildren}</div>
+      <div style=${artifactsStyle}>${artifactsChildren}</div>
     </div>
   `;
 }
 
-function Artifact({ artifact }) {
+function Artifact({ artifact, price, action }) {
   const artifactStyle = {
     display: "grid",
-    gridTemplateColumns: "2.5fr 1fr 1fr 1fr 1fr 1fr 1.5fr",
+    gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
     textAlign: "right",
+  };
+
+  const artifactTypeStyle = {
+    color: rarityColor(artifact.rarity),
+    textAlign: "left",
+  };
+
+  const inputStyle = {
+    outline: "none",
+    background: "rgb(21, 21, 21)",
+    color: "rgb(131, 131, 131)",
+    borderRadius: "4px",
+    border: "1px solid rgb(95, 95, 95)",
+    width: 42,
+    padding: "0 2px",
+    "::-webkit-outer-spin-button": {
+      WebkitAppearance: "none",
+      margin: 0,
+    },
+    "::-webkit-inner-spin-button": {
+      WebkitAppearance: "none",
+      margin: 0,
+    },
+    "::-webkit-inner-spin-button": {},
+    "[type=number]": {
+      "-moz-appearance": "textfield",
+    },
+  };
+
+  const buttonStyle = {
+    border: 0,
+    width: 42,
+    background: "#5f5f5f",
+  };
+
+  const InputMockup = () => {
+    if (price)
+      return html`
+        <div>
+          <p>$${price}</p>
+        </div>
+      `;
+
+    return html`
+      <div>
+        <input style=${inputStyle} type="number" step="0.01" min="0.01" />
+      </div>
+    `;
   };
 
   return html`
     <div style=${artifactStyle}>
-      <div style=${{ textAlign: "left" }}>${artifact.artifactType}</div>
-      <div>${formatMultiplier(artifact.energyCapMultiplier)}</div>
-      <div>${formatMultiplier(artifact.energyGrowthMultiplier)}</div>
-      <div>${formatMultiplier(artifact.rangeMultiplier)}</div>
-      <div>${formatMultiplier(artifact.speedMultiplier)}</div>
-      <div>${formatMultiplier(artifact.defenseMultiplier)}</div>
-      <div>${artifact.rarity}</div>
+      <div style=${artifactTypeStyle}>
+        ${artifactName(artifact.artifactType)}
+      </div>
+      <div
+        style=${{ color: formatMultiplierColor(artifact.energyCapMultiplier) }}
+      >
+        ${formatMultiplier(artifact.energyCapMultiplier)}
+      </div>
+      <div
+        style=${{
+          color: formatMultiplierColor(artifact.energyGrowthMultiplier),
+        }}
+      >
+        ${formatMultiplier(artifact.energyGrowthMultiplier)}
+      </div>
+      <div style=${{ color: formatMultiplierColor(artifact.rangeMultiplier) }}>
+        ${formatMultiplier(artifact.rangeMultiplier)}
+      </div>
+      <div style=${{ color: formatMultiplierColor(artifact.speedMultiplier) }}>
+        ${formatMultiplier(artifact.speedMultiplier)}
+      </div>
+      <div
+        style=${{ color: formatMultiplierColor(artifact.defenseMultiplier) }}
+      >
+        ${formatMultiplier(artifact.defenseMultiplier)}
+      </div>
+      <${InputMockup} price=${price} />
+      <div><button style=${buttonStyle}>${action}</button></div>
     </div>
   `;
 }
@@ -271,6 +397,12 @@ function formatMultiplier(value) {
   if (value === 100) return `+0%`;
   if (value > 100) return `+${value - 100}%`;
   return `-${100 - value}%`;
+}
+
+function formatMultiplierColor(value) {
+  if (value === 100) return Colors.muted;
+  if (value > 100) return Colors.green;
+  return Colors.red;
 }
 
 function myListedRow(artifact) {
