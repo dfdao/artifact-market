@@ -11,10 +11,10 @@ contract Market{
   
     struct Listing{
         address owner;       // who owns the listed artifact
-        uint256 buyoutPrice; // buy out price, any bid greater will buy the artifact instantly
+        uint256 buyoutPrice; // price of the artifact in xdai
     }
 
-    address public admin;  // The admin can change the fee and also reset the token contract after each new round
+    address public admin;  // The admin can reset the token contract after each new round
     uint256 public endDate;
     mapping(uint256 => Listing) public listings; // all listings 
     
