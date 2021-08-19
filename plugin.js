@@ -101,19 +101,22 @@ function artifactName(name) {
 
 const TabsType = {
   market: 0,
-  inventory: 1,
-  activity: 2,
+  listings: 1,
+  inventory: 2,
+  activity: 3,
 };
 
 const TabsTypeNames = {
   [0]: "Market",
-  [1]: "Inventory",
-  [2]: "Activity",
+  [1]: "Listings",
+  [2]: "Inventory",
+  [3]: "Activity",
 };
 
 function App() {
   const [activeTab, setActiveTab] = useState(TabsType.market);
-  const { balance } = useWallet();
+  const { balanceShort } = useWallet();
+
   const styleTabContainer = {
     position: "relative",
     height: "100%",
@@ -128,7 +131,7 @@ function App() {
     position: "absolute",
     padding: "8px",
     gridColumnGap: "8px",
-    gridTemplateColumns: "auto auto auto 1fr",
+    gridTemplateColumns: "auto auto auto auto 1fr",
     justifyContent: "flex-start",
     alignItems: "center",
     bottom: 0,
@@ -150,6 +153,7 @@ function App() {
     <div style=${styleTabContainer}>
       <div style=${styleTabContent}>
         ${TabsType.market === activeTab && html`<${Market} />`}
+        ${TabsType.listings === activeTab && html`<${Listings} />`}
         ${TabsType.inventory === activeTab && html`<${Inventory} />`}
         ${TabsType.activity === activeTab && html`<${Activity} />`}
       </div>
@@ -160,16 +164,21 @@ function App() {
           children=${TabsTypeNames[0]}
         />
         <${Button}
+          style=${styleTab(TabsType.listings === activeTab)}
+          onClick=${() => setActiveTab(TabsType.listings)}
+          children=${TabsTypeNames[1]}
+        />
+        <${Button}
           style=${styleTab(TabsType.inventory === activeTab)}
           onClick=${() => setActiveTab(TabsType.inventory)}
-          children=${TabsTypeNames[1]}
+          children=${TabsTypeNames[2]}
         />
         <${Button}
           style=${styleTab(TabsType.activity === activeTab)}
           onClick=${() => setActiveTab(TabsType.activity)}
-          children=${TabsTypeNames[2]}
+          children=${TabsTypeNames[3]}
         />
-        <span style=${styleBalance}>${balance} xDai</span>
+        <span style=${styleBalance}>${balanceShort} xDai</span>
       </div>
     </div>
   `;
@@ -197,16 +206,41 @@ function Market() {
   return html`
     <div style=${artifactsStyle}>
       <${Artifacts}
-        title="Your Listed Artifacts"
-        empty="You don't currently have any artifacts listed."
-        artifacts=${data.artifactsListed}
-      />
-      <${Artifacts}
         title="Artifacts For Sale"
         empty="There aren't currently any artifacts listed for sale."
         action="buy"
         price="1.0"
         artifacts=${data.artifactsForSale}
+      />
+    </div>
+  `;
+}
+
+function Listings() {
+  const { data, loading, error } = useSubgraph();
+  const artifactsStyle = {
+    display: "grid",
+    width: "100%",
+    padding: "8px",
+    gridRowGap: "16px",
+  };
+
+  if (loading) return html`<${Loading} />`;
+
+  if (error)
+    return html`
+      <div>
+        <h1>Something went wrong...</h1>
+        <p>${JSON.stringify(error, null, 2)}</p>
+      </div>
+    `;
+
+  return html`
+    <div style=${artifactsStyle}>
+      <${Artifacts}
+        title="Your Listed Artifacts"
+        empty="You don't currently have any artifacts listed."
+        artifacts=${data.artifactsListed}
       />
     </div>
   `;
@@ -251,11 +285,7 @@ function Activity() {
     gridRowGap: "16px",
   };
 
-  return html`
-    <div style=${styleActivity}>
-      <h1>Activity</h1>
-    </div>
-  `;
+  return html` <div style=${styleActivity}></div> `;
 }
 
 function Loading() {
@@ -311,7 +341,6 @@ function Artifacts({ title, empty, artifacts = [], price, action }) {
 
   return html`
     <div>
-      <h1>${title}</h1>
       <div style=${artifactsStyle}>${artifactsChildren}</div>
     </div>
   `;
@@ -481,7 +510,7 @@ function useWallet() {
     return sub.unsubscribe;
   }, [setBalance]);
 
-  return { balance };
+  return { balance, balanceShort: Number.parseFloat(balance).toFixed(2) };
 }
 
 // fetch subgraph data for token stats and prices
