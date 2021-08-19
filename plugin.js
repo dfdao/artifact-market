@@ -22,6 +22,8 @@ const ARTIFACTS_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
 const MARKET_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8";
 const MARKET_ABI =
   "https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json";
+const ARTIFACTS_ABI =
+  "https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json";
 const CACHE_KEY = "ARTIFACT-MARKET";
 const ARTIFACTS_KEY = "ARTIFACTS-CONTRACT";
 const MARKET_KEY = "MARKET-CONTRACT";
@@ -57,6 +59,20 @@ const RarityColors = {
   [ArtifactRarity.Epic]: Colors.dfepic,
   [ArtifactRarity.Legendary]: Colors.dflegendary,
   [ArtifactRarity.Mythic]: Colors.dfmythic,
+};
+// #endregion
+
+// #region Types
+const TabsType = {
+  market: 0,
+  listings: 1,
+  inventory: 2,
+};
+
+const TabsTypeNames = {
+  [0]: "Market",
+  [1]: "Listings",
+  [2]: "Inventory",
 };
 // #endregion
 
@@ -229,18 +245,6 @@ function App() {
   const [activeTab, setActiveTab] = useState(TabsType.market);
   const { balanceShort } = useWallet();
 
-  const TabsType = {
-    market: 0,
-    listings: 1,
-    inventory: 2,
-  };
-
-  const TabsTypeNames = {
-    [0]: "Market",
-    [1]: "Listings",
-    [2]: "Inventory",
-  };
-
   const styleTabContainer = {
     position: "relative",
     height: "100%",
@@ -303,7 +307,7 @@ function App() {
 }
 
 function Market() {
-  const { data, loading, error } = useSubgraph();
+  const { data, loading, error } = useMarket();
   const artifactsStyle = {
     display: "grid",
     width: "100%",
@@ -347,7 +351,7 @@ function Market() {
 }
 
 function Listings() {
-  const { data, loading, error } = useSubgraph();
+  const { data, loading, error } = useMarket();
   const artifactsStyle = {
     display: "grid",
     width: "100%",
@@ -384,7 +388,7 @@ function Listings() {
 }
 
 function Inventory() {
-  const { data, loading, error } = useSubgraph();
+  const { data, loading, error } = useInventory();
   const artifactsStyle = {
     display: "grid",
     width: "100%",
@@ -465,6 +469,35 @@ function useMarketContract() {
 
 function useArtifactsContract() {
   return useContract(ARTIFACTS_KEY, ARTIFACTS_ABI, ARTIFACTS_ADDRESS);
+}
+
+function useMarket() {
+  const marketContract = useMarketContract();
+  const subgraph = useSubgraph();
+
+  return {
+    data: {
+      artifactsForSale: subgraph.data?.artifactsForSale,
+      artifactsListed: subgraph.data?.artifactsListed,
+      marketContract: marketContract.data,
+    },
+    loading: marketContract.loading || subgraph.loading,
+    error: marketContract.error || subgraph.error,
+  };
+}
+
+function useInventory() {
+  const artifactsContract = useArtifactsContract();
+  const subgraph = useSubgraph();
+
+  return {
+    data: {
+      artifactsOwned: subgraph.data?.artifactsOwned,
+      artifactsContract: artifactsContract.data,
+    },
+    loading: artifactsContract.loading || subgraph.loading,
+    error: artifactsContract.error || subgraph.error,
+  };
 }
 
 function useWallet() {
