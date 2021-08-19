@@ -113,6 +113,7 @@ const TabsTypeNames = {
 
 function App() {
   const [activeTab, setActiveTab] = useState(TabsType.market);
+  const { balance } = useWallet();
   const styleTabContainer = {
     position: "relative",
     height: "100%",
@@ -127,16 +128,20 @@ function App() {
     position: "absolute",
     padding: "8px",
     gridColumnGap: "8px",
-    gridAutoFlow: "column",
+    gridTemplateColumns: "auto auto auto 1fr",
     justifyContent: "flex-start",
+    alignItems: "center",
     bottom: 0,
     width: "100%",
     background: Colors.background,
     borderTop: `1px solid ${Colors.borderlight}`,
   };
+  const styleBalance = {
+    color: Colors.dfgreen,
+  };
 
   const styleTab = (isActive) => ({
-    color: isActive ? Colors.dfblue : Colors.gray,
+    color: isActive ? Colors.dfblue : Colors.muted,
     background: Colors.background,
   });
 
@@ -163,6 +168,7 @@ function App() {
           onClick=${() => setActiveTab(TabsType.activity)}
           children=${TabsTypeNames[2]}
         />
+        <span style=${styleBalance}>${balance} xDai</span>
       </div>
     </div>
   `;
@@ -418,6 +424,27 @@ function themeButton(theme, isActive) {
         background: isActive ? Colors.muted : Colors.backgrounddark,
       };
   }
+}
+
+function getMyBalance() {
+  return df.getMyBalanceEth();
+}
+
+// This contains a terrible hack around bad APIs
+// getMyBalance$() emitter emits BigNumbers instead of the same type as returned by getMyBalance()
+export function subscribeToMyBalance(cb) {
+  return df.getMyBalance$().subscribe(() => cb(getMyBalance()));
+}
+
+function useWallet() {
+  const [balance, setBalance] = useState(getMyBalance);
+
+  useEffect(() => {
+    const sub = subscribeToMyBalance(setBalance);
+    return sub.unsubscribe;
+  }, [setBalance]);
+
+  return { balance };
 }
 
 // fetch subgraph data for token stats and prices
