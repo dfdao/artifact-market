@@ -137,7 +137,8 @@ function App() {
     borderTop: `1px solid ${Colors.borderlight}`,
   };
   const styleBalance = {
-    color: Colors.dfgreen,
+    color: Colors.dfyellow,
+    textAlign: "right",
   };
 
   const styleTab = (isActive) => ({
