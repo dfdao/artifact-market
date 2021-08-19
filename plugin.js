@@ -86,34 +86,16 @@ class Plugin {
   }
 }
 
-// convert key to match df format, return color
-function rarityColor(key) {
-  const rarity = key[0] + key.toLowerCase().slice(1, key.length); // COMMON => Common
-  const rarityId = ArtifactRarity[rarity];
-  return RarityColors[rarityId];
-}
-
-// convert uppercase artifactType to properly formatted name
-function artifactName(name) {
-  const typeID = Object.keys(ArtifactType).find(
-    (key) => key.toUpperCase() === name
-  );
-  const artifactId = ArtifactType[typeID];
-  return ArtifactTypeNames[artifactId];
-}
-
 const TabsType = {
   market: 0,
   listings: 1,
   inventory: 2,
-  activity: 3,
 };
 
 const TabsTypeNames = {
   [0]: "Market",
   [1]: "Listings",
   [2]: "Inventory",
-  [3]: "Activity",
 };
 
 function App() {
@@ -134,7 +116,7 @@ function App() {
     position: "absolute",
     padding: "8px",
     gridColumnGap: "8px",
-    gridTemplateColumns: "auto auto auto auto 1fr",
+    gridTemplateColumns: "auto auto auto 1fr",
     justifyContent: "flex-start",
     alignItems: "center",
     bottom: 0,
@@ -158,7 +140,6 @@ function App() {
         ${TabsType.market === activeTab && html`<${Market} />`}
         ${TabsType.listings === activeTab && html`<${Listings} />`}
         ${TabsType.inventory === activeTab && html`<${Inventory} />`}
-        ${TabsType.activity === activeTab && html`<${Activity} />`}
       </div>
       <div style=${styleTabs}>
         <${Button}
@@ -175,11 +156,6 @@ function App() {
           style=${styleTab(TabsType.inventory === activeTab)}
           onClick=${() => setActiveTab(TabsType.inventory)}
           children=${TabsTypeNames[2]}
-        />
-        <${Button}
-          style=${styleTab(TabsType.activity === activeTab)}
-          onClick=${() => setActiveTab(TabsType.activity)}
-          children=${TabsTypeNames[3]}
         />
         <span style=${styleBalance}>${balanceShort} xDai</span>
       </div>
@@ -307,17 +283,6 @@ function Inventory() {
       />
     </div>
   `;
-}
-
-function Activity() {
-  const styleActivity = {
-    display: "grid",
-    width: "100%",
-    padding: "8px",
-    gridRowGap: "16px",
-  };
-
-  return html` <div style=${styleActivity}></div> `;
 }
 
 function Loading() {
@@ -668,6 +633,22 @@ function formatMultiplierColor(value) {
   if (value === 100) return Colors.muted;
   if (value > 100) return Colors.dfgreen;
   return Colors.dfred;
+}
+
+// convert key to match df format, return color
+function rarityColor(key) {
+  const rarity = key[0] + key.toLowerCase().slice(1, key.length); // COMMON => Common
+  const rarityId = ArtifactRarity[rarity];
+  return RarityColors[rarityId];
+}
+
+// convert uppercase artifactType to properly formatted name
+function artifactName(name) {
+  const typeID = Object.keys(ArtifactType).find(
+    (key) => key.toUpperCase() === name
+  );
+  const artifactId = ArtifactType[typeID];
+  return ArtifactTypeNames[artifactId];
 }
 
 export default Plugin;
