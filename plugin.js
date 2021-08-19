@@ -22,7 +22,9 @@ const ARTIFACTS_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
 const MARKET_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8";
 const MARKET_ABI =
   "https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json";
-const CACHE_KEY = "ARTIFACT-MARKET"
+const CACHE_KEY = "ARTIFACT-MARKET";
+const ARTIFACTS_KEY = "ARTIFACTS-CONTRACT";
+const MARKET_KEY = "MARKET-CONTRACT";
 
 // Dark Forest Helpers - ideally these would be imported from cdn
 
@@ -59,6 +61,170 @@ const RarityColors = {
 // #endregion
 
 // #region Components
+function Loading() {
+  const loadingStyle = {
+    display: "grid",
+    width: "100%",
+    minHeight: "100%",
+    placeContent: "center",
+  };
+
+  return html`
+    <div style=${loadingStyle}>
+      <span class="Wrap-sc-1ehljia yxLrH">
+        <span class="Static-sc-1sdikul daiCTc">Loading</span>
+        <span class="Anim-sc-1s9k1th cicvbr">
+          <span class="AnimDelay-sc-170sl4v kzVTlq">L</span>
+          <span class="AnimDelay-sc-170sl4v cTQehp">o</span>
+          <span class="AnimDelay-sc-170sl4v gVukkp">a</span>
+          <span class="AnimDelay-sc-170sl4v gHvIwK">d</span>
+          <span class="AnimDelay-sc-170sl4v brzOHe">i</span>
+          <span class="AnimDelay-sc-170sl4v bYMvlb">n</span>
+          <span class="AnimDelay-sc-170sl4v efJVaj">g</span>
+          <span class="AnimDelay-sc-170sl4v ihobdj">.</span>
+          <span class="AnimDelay-sc-170sl4v fvBRDQ">.</span>
+          <span class="AnimDelay-sc-170sl4v fFXOk">.</span>
+        </span>
+      </span>
+    </div>
+  `;
+}
+
+function Artifacts({ title, empty, artifacts = [], price, action }) {
+  const artifactsStyle = {
+    display: "grid",
+    gridRowGap: "4px",
+  };
+
+  const emptyStyle = {
+    color: "#838383",
+  };
+
+  const artifactsChildren = artifacts.length
+    ? artifacts.map(
+        (artifact) =>
+          html`<${Artifact}
+            key=${artifact.id}
+            artifact=${artifact}
+            price=${price}
+            action=${action}
+          />`
+      )
+    : html`<p style=${emptyStyle}>${empty}</p>`;
+
+  return html`
+    <div>
+      <div style=${artifactsStyle}>${artifactsChildren}</div>
+    </div>
+  `;
+}
+
+function Artifact({ artifact, price, action }) {
+  const artifactStyle = {
+    display: "grid",
+    gridTemplateColumns: "2.6fr 1fr 1fr 1fr 1fr 1fr auto",
+    gridColumnGap: "8px",
+    textAlign: "right",
+  };
+
+  const artifactTypeStyle = {
+    color: rarityColor(artifact.rarity),
+    textAlign: "left",
+  };
+
+  const inputStyle = {
+    outline: "none",
+    background: "rgb(21, 21, 21)",
+    color: "rgb(131, 131, 131)",
+    borderRadius: "4px",
+    border: "1px solid rgb(95, 95, 95)",
+    width: 42,
+    padding: "0 2px",
+    "::-webkit-outer-spin-button": {
+      WebkitAppearance: "none",
+      margin: 0,
+    },
+    "::-webkit-inner-spin-button": {
+      WebkitAppearance: "none",
+      margin: 0,
+    },
+    "::-webkit-inner-spin-button": {},
+    "[type=number]": {
+      "-moz-appearance": "textfield",
+    },
+  };
+
+  const InputMockup = () => {
+    if (price)
+      return html`
+        <div>
+          <p>$${price}</p>
+        </div>
+      `;
+
+    return html`
+      <div>
+        <input style=${inputStyle} type="number" step="0.01" min="0.01" />
+      </div>
+    `;
+  };
+
+  return html`
+    <div style=${artifactStyle}>
+      <div style=${artifactTypeStyle}>
+        ${formatArtifactName(artifact.artifactType)}
+      </div>
+      <div
+        style=${{ color: formatMultiplierColor(artifact.energyCapMultiplier) }}
+      >
+        ${formatMultiplier(artifact.energyCapMultiplier)}
+      </div>
+      <div
+        style=${{
+          color: formatMultiplierColor(artifact.energyGrowthMultiplier),
+        }}
+      >
+        ${formatMultiplier(artifact.energyGrowthMultiplier)}
+      </div>
+      <div style=${{ color: formatMultiplierColor(artifact.rangeMultiplier) }}>
+        ${formatMultiplier(artifact.rangeMultiplier)}
+      </div>
+      <div style=${{ color: formatMultiplierColor(artifact.speedMultiplier) }}>
+        ${formatMultiplier(artifact.speedMultiplier)}
+      </div>
+      <div
+        style=${{ color: formatMultiplierColor(artifact.defenseMultiplier) }}
+      >
+        ${formatMultiplier(artifact.defenseMultiplier)}
+      </div>
+      <div>
+        <${Button}
+          theme=${action === "buy" ? "green" : "yellow"}
+          style=${{ marginLeft: "8px" }}
+          children=${action}
+        />
+      </div>
+    </div>
+  `;
+}
+
+function Button({ children, style, theme = "default", onClick }) {
+  const [isActive, setIsActive] = useState(false);
+
+  return html`
+    <button
+      style=${{ ...styleButton(theme, isActive), ...style }}
+      onMouseEnter=${() => setIsActive(true)}
+      onMouseLeave=${() => setIsActive(false)}
+      onClick=${onClick}
+    >
+      ${children}
+    </button>
+  `;
+}
+// #endregion
+
+// #region Views
 function App() {
   const [activeTab, setActiveTab] = useState(TabsType.market);
   const { balanceShort } = useWallet();
@@ -68,7 +234,7 @@ function App() {
     listings: 1,
     inventory: 2,
   };
-  
+
   const TabsTypeNames = {
     [0]: "Market",
     [1]: "Listings",
@@ -257,200 +423,48 @@ function Inventory() {
     </div>
   `;
 }
-
-function Loading() {
-  const loadingStyle = {
-    display: "grid",
-    width: "100%",
-    minHeight: "100%",
-    placeContent: "center",
-  };
-
-  return html`
-    <div style=${loadingStyle}>
-      <span class="Wrap-sc-1ehljia yxLrH">
-        <span class="Static-sc-1sdikul daiCTc">Loading</span>
-        <span class="Anim-sc-1s9k1th cicvbr">
-          <span class="AnimDelay-sc-170sl4v kzVTlq">L</span>
-          <span class="AnimDelay-sc-170sl4v cTQehp">o</span>
-          <span class="AnimDelay-sc-170sl4v gVukkp">a</span>
-          <span class="AnimDelay-sc-170sl4v gHvIwK">d</span>
-          <span class="AnimDelay-sc-170sl4v brzOHe">i</span>
-          <span class="AnimDelay-sc-170sl4v bYMvlb">n</span>
-          <span class="AnimDelay-sc-170sl4v efJVaj">g</span>
-          <span class="AnimDelay-sc-170sl4v ihobdj">.</span>
-          <span class="AnimDelay-sc-170sl4v fvBRDQ">.</span>
-          <span class="AnimDelay-sc-170sl4v fFXOk">.</span>
-        </span>
-      </span>
-    </div>
-  `;
-}
-
-function Artifacts({ title, empty, artifacts = [], price, action }) {
-  const artifactsStyle = {
-    display: "grid",
-    gridRowGap: "4px",
-  };
-
-  const emptyStyle = {
-    color: "#838383",
-  };
-
-  const artifactsChildren = artifacts.length
-    ? artifacts.map(
-        (artifact) =>
-          html`<${Artifact}
-            key=${artifact.id}
-            artifact=${artifact}
-            price=${price}
-            action=${action}
-          />`
-      )
-    : html`<p style=${emptyStyle}>${empty}</p>`;
-
-  return html`
-    <div>
-      <div style=${artifactsStyle}>${artifactsChildren}</div>
-    </div>
-  `;
-}
-
-function Artifact({ artifact, price, action }) {
-  const artifactStyle = {
-    display: "grid",
-    gridTemplateColumns: "2.6fr 1fr 1fr 1fr 1fr 1fr auto",
-    gridColumnGap: "8px",
-    textAlign: "right",
-  };
-
-  const artifactTypeStyle = {
-    color: rarityColor(artifact.rarity),
-    textAlign: "left",
-  };
-
-  const inputStyle = {
-    outline: "none",
-    background: "rgb(21, 21, 21)",
-    color: "rgb(131, 131, 131)",
-    borderRadius: "4px",
-    border: "1px solid rgb(95, 95, 95)",
-    width: 42,
-    padding: "0 2px",
-    "::-webkit-outer-spin-button": {
-      WebkitAppearance: "none",
-      margin: 0,
-    },
-    "::-webkit-inner-spin-button": {
-      WebkitAppearance: "none",
-      margin: 0,
-    },
-    "::-webkit-inner-spin-button": {},
-    "[type=number]": {
-      "-moz-appearance": "textfield",
-    },
-  };
-
-  const InputMockup = () => {
-    if (price)
-      return html`
-        <div>
-          <p>$${price}</p>
-        </div>
-      `;
-
-    return html`
-      <div>
-        <input style=${inputStyle} type="number" step="0.01" min="0.01" />
-      </div>
-    `;
-  };
-
-  return html`
-    <div style=${artifactStyle}>
-      <div style=${artifactTypeStyle}>
-        ${artifactName(artifact.artifactType)}
-      </div>
-      <div
-        style=${{ color: formatMultiplierColor(artifact.energyCapMultiplier) }}
-      >
-        ${formatMultiplier(artifact.energyCapMultiplier)}
-      </div>
-      <div
-        style=${{
-          color: formatMultiplierColor(artifact.energyGrowthMultiplier),
-        }}
-      >
-        ${formatMultiplier(artifact.energyGrowthMultiplier)}
-      </div>
-      <div style=${{ color: formatMultiplierColor(artifact.rangeMultiplier) }}>
-        ${formatMultiplier(artifact.rangeMultiplier)}
-      </div>
-      <div style=${{ color: formatMultiplierColor(artifact.speedMultiplier) }}>
-        ${formatMultiplier(artifact.speedMultiplier)}
-      </div>
-      <div
-        style=${{ color: formatMultiplierColor(artifact.defenseMultiplier) }}
-      >
-        ${formatMultiplier(artifact.defenseMultiplier)}
-      </div>
-      <div>
-        <${Button}
-          theme=${action === "buy" ? "green" : "yellow"}
-          style=${{ marginLeft: "8px" }}
-          children=${action}
-        />
-      </div>
-    </div>
-  `;
-}
-
-function Button({ children, style, theme = "default", onClick }) {
-  const [isActive, setIsActive] = useState(false);
-
-  return html`
-    <button
-      style=${{ ...styleButton(theme, isActive), ...style }}
-      onMouseEnter=${() => setIsActive(true)}
-      onMouseLeave=${() => setIsActive(false)}
-      onClick=${onClick}
-    >
-      ${children}
-    </button>
-  `;
-}
 // #endregion
 
 // #region Hooks
-function useWindowCache () {
-  const [cache, setCache] = useState(window[CACHE_KEY])
-  const [cache, setCache] = useState(window[CACHE_KEY])
+function useCache() {
+  const [cache, setCache] = useState(window[CACHE_KEY] || {});
+  const updateCache = (update) => setCache({ ...cache, ...update });
 
+  // when cache is set, save it on the window key
   useEffect(() => {
-    if (!cache) {
-      const marketABI = await fetch(MARKET_ABI).then((res) => res.json());
-      const marketContract = await df.loadContract(MARKET_ADDRESS, marketABI);
-      const artifactsABI = await fetch(MARKET_ABI).then((res) => res.json());
-      const artifacts = await df.loadContract(ARTIFACTS_ADDRESS, artifactsABI);  
-    }
-  }, [])
+    window[CACHE_KEY] = cache;
+  }, [cache]);
 
-  return {
-    data: null,
-    loading: null,
-    error: null,
-  }
+  return [cache, updateCache];
+}
+
+function useContract(KEY, ABI, ADDRESS) {
+  const [cache, updateCache] = useCache();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(!cache[KEY]);
+  const data = cache[KEY];
+
+  useEffect(async () => {
+    if (!cache.contract) {
+      const abi = await fetch(ABI)
+        .then((res) => res.json())
+        .catch(setError);
+      const contract = await df.loadContract(ADDRESS, abi).catch(setError);
+
+      updateCache({ [KEY]: { abi, contract } });
+      setLoading(false);
+    }
+  }, []);
+
+  return { data, loading, error };
 }
 
 function useMarketContract() {
-  
-  const market = window[CACHE_KEY].
+  return useContract(MARKET_KEY, MARKET_ABI, MARKET_ADDRESS);
 }
 
 function useArtifactsContract() {
-  
-  // Approve the market for all tokens
-  // ARTIFACTS.setApprovalForAll(MARKET_ADDRESS, true).catch(console.log)
+  return useContract(ARTIFACTS_KEY, ARTIFACTS_ABI, ARTIFACTS_ADDRESS);
 }
 
 function useWallet() {
@@ -643,7 +657,7 @@ function formatMultiplierColor(value) {
 }
 
 // convert uppercase artifactType to properly formatted name
-function artifactName(name) {
+function formatArtifactName(name) {
   const typeID = Object.keys(ArtifactType).find(
     (key) => key.toUpperCase() === name
   );
