@@ -35,19 +35,33 @@ const TOKENS = await df.loadContract(
 // Dark Forest Helpers - ideally these would be imported from cdn
 
 const Colors = {
-  green: "#00dc82",
-  red: "#ff6492",
   muted: "#838383",
+  gray: "#aaaaaa",
+  background: "#151515",
+  backgrounddark: "#252525",
+  border: "#777",
+  blueBackground: "#0a0a23",
+  dfblue: "#00ADE1",
+  dfgreen: "#00DC82",
+  dfred: "#FF6492",
+  dfyellow: "#e8e228",
+  dfpurple: "#9189d9",
+  dfwhite: "#ffffff",
+  dfblack: "#000000",
+  dfrare: "#6b68ff",
+  dfepic: "#c13cff",
+  dflegendary: "#f8b73e",
+  dfmythic: "#ff44b7",
 };
 
 // https://github.com/darkforest-eth/client/blob/00492e06b8acf378e7dacc1c02b8ede61481bba3/src/Frontend/Styles/Colors.tsx
 const RarityColors = {
-  [ArtifactRarity.Unknown]: "#000000",
+  [ArtifactRarity.Unknown]: Colors.dfblack,
   [ArtifactRarity.Common]: Colors.muted,
-  [ArtifactRarity.Rare]: "#6b68ff",
-  [ArtifactRarity.Epic]: "#c13cff",
-  [ArtifactRarity.Legendary]: "#f8b73e",
-  [ArtifactRarity.Mythic]: "#ff44b7",
+  [ArtifactRarity.Rare]: Colors.dfrare,
+  [ArtifactRarity.Epic]: Colors.dfepic,
+  [ArtifactRarity.Legendary]: Colors.dflegendary,
+  [ArtifactRarity.Mythic]: Colors.dfmythic,
 };
 
 class Plugin {
@@ -88,6 +102,8 @@ function App() {
   return html`<${Market} />`;
 }
 
+// navigation: inventory, market, history
+
 function Market() {
   const { data, loading, error } = useSubgraph();
   console.log(data, loading, error);
@@ -114,7 +130,7 @@ function Market() {
       <${Artifacts}
         title="Your Artifacts"
         empty="You don't currently have any artifacts."
-        action="List"
+        action="sell"
         artifacts=${data.artifactsOwned}
       />
       <${Artifacts}
@@ -125,7 +141,7 @@ function Market() {
       <${Artifacts}
         title="Artifacts For Sale"
         empty="There aren't currently any artifacts listed for sale."
-        action="Buy"
+        action="buy"
         price="1.0"
         artifacts=${data.artifactsForSale}
       />
@@ -195,7 +211,8 @@ function Artifacts({ title, empty, artifacts = [], price, action }) {
 function Artifact({ artifact, price, action }) {
   const artifactStyle = {
     display: "grid",
-    gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr",
+    gridTemplateColumns: "2.6fr 1fr 1fr 1fr 1fr 1fr auto",
+    gridColumnGap: "8px",
     textAlign: "right",
   };
 
@@ -224,12 +241,6 @@ function Artifact({ artifact, price, action }) {
     "[type=number]": {
       "-moz-appearance": "textfield",
     },
-  };
-
-  const buttonStyle = {
-    border: 0,
-    width: 42,
-    background: "#5f5f5f",
   };
 
   const InputMockup = () => {
@@ -275,10 +286,71 @@ function Artifact({ artifact, price, action }) {
       >
         ${formatMultiplier(artifact.defenseMultiplier)}
       </div>
-      <${InputMockup} price=${price} />
-      <div><button style=${buttonStyle}>${action}</button></div>
+      <div>
+        <${Button}
+          theme=${action === "buy" ? "green" : "yellow"}
+          style=${{ marginLeft: "8px" }}
+          children=${action}
+        />
+      </div>
     </div>
   `;
+}
+
+function Button({ children, style, theme = "default", onClick }) {
+  const [isActive, setIsActive] = useState(false);
+
+  return html`
+    <button
+      style=${{ ...style, ...styleButton(theme, isActive) }}
+      onMouseEnter=${() => setIsActive(true)}
+      onMouseLeave=${() => setIsActive(false)}
+      onClick=${onClick}
+    >
+      ${children}
+    </button>
+  `;
+}
+
+function styleButton(theme, isActive) {
+  const styleBase = {
+    padding: "2px 8px",
+    border: 0,
+    color: isActive ? Colors.gray.dfblack : Colors.gray,
+  };
+
+  return { ...styleBase, ...themeButton(theme, isActive) };
+}
+
+function themeButton(theme, isActive) {
+  switch (theme) {
+    case "blue":
+    case "info":
+      return {
+        background: isActive ? Colors.dfblue : Colors.backgrounddark,
+      };
+    case "yellow":
+    case "warning":
+      return {
+        background: isActive ? Colors.dfyellow : Colors.backgrounddark,
+      };
+    case "green":
+    case "success":
+      return {
+        background: isActive ? Colors.dfgreen : Colors.backgrounddark,
+      };
+    case "red":
+    case "danger":
+      return {
+        background: isActive ? Colors.dfgreen : Colors.backgrounddark,
+      };
+    case "gray":
+    case "default":
+    default:
+      return {
+        background: isActive ? Colors.muted : Colors.backgrounddark,
+      };
+  }
 }
 
 // fetch subgraph data for token stats and prices
@@ -401,8 +473,8 @@ function formatMultiplier(value) {
 
 function formatMultiplierColor(value) {
   if (value === 100) return Colors.muted;
-  if (value > 100) return Colors.green;
-  return Colors.red;
+  if (value > 100) return Colors.dfgreen;
+  return Colors.dfred;
 }
 
 function myListedRow(artifact) {
