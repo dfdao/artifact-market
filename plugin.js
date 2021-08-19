@@ -1,4 +1,3 @@
-import { BigNumber, utils } from "https://cdn.skypack.dev/ethers";
 import {
   html,
   render,
@@ -10,30 +9,20 @@ import {
   ArtifactType,
   ArtifactTypeNames,
 } from "http://cdn.skypack.dev/@darkforest_eth/types";
+import { BigNumber, utils } from "https://cdn.skypack.dev/ethers";
 
-const DF_GRAPH_URL =
-  "https://api.thegraph.com/subgraphs/name/darkforest-eth/dark-forest-v06-round-2";
-const MARKET_GRAPH_URL =
-  "https://api.thegraph.com/subgraphs/name/zk-farts/dfartifactmarket";
+// #region Constants
+const SUBGRAPH_ENDPOINT = "https://api.thegraph.com/subgraphs/name";
+const DARKFOREST_GRAPH_ENDPOINT = `${SUBGRAPH_ENDPOINT}/darkforest-eth/dark-forest-v06-round-2`;
+const MARKET_GRAPH_ENDPOINT = `${SUBGRAPH_ENDPOINT}/zk-farts/dfartifactmarket`;
 
-// you can see the contract at https://blockscout.com/poa/xdai/address/0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8
-const SALES_CONTRACT_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8";
-const SALES_CONTRACT_ABI = await fetch(
-  "https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json"
-).then((res) => res.json());
-const SALES = await df.loadContract(SALES_CONTRACT_ADDRESS, SALES_CONTRACT_ABI);
-
-const TOKENS_CONTRACT_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96"; // when a new round starts someone has to change this
-const TOKENS_APPROVAL_ABI = await fetch(
-  "https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json"
-).then((res) => res.json());
-const TOKENS = await df.loadContract(
-  TOKENS_CONTRACT_ADDRESS,
-  TOKENS_APPROVAL_ABI
-);
-
-// Approve the market for all tokens
-// TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS, true).catch(console.log)
+// market contract on blockscout: https://blockscout.com/poa/xdai/address/0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8
+// when a new round starts ARTIFACTS_ADDRESS must be updated
+const ARTIFACTS_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
+const MARKET_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8";
+const MARKET_ABI =
+  "https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json";
+const CACHE_KEY = "ARTIFACT-MARKET"
 
 // Dark Forest Helpers - ideally these would be imported from cdn
 
@@ -67,40 +56,24 @@ const RarityColors = {
   [ArtifactRarity.Legendary]: Colors.dflegendary,
   [ArtifactRarity.Mythic]: Colors.dfmythic,
 };
+// #endregion
 
-class Plugin {
-  constructor() {
-    this.container = null;
-  }
-
-  render(container) {
-    this.container = container;
-    this.container.style.width = "512px";
-    this.container.style.height = "384px";
-    this.container.style.padding = 0;
-    render(html`<${App} />`, container);
-  }
-
-  destroy() {
-    render(null, this.container);
-  }
-}
-
-const TabsType = {
-  market: 0,
-  listings: 1,
-  inventory: 2,
-};
-
-const TabsTypeNames = {
-  [0]: "Market",
-  [1]: "Listings",
-  [2]: "Inventory",
-};
-
+// #region Components
 function App() {
   const [activeTab, setActiveTab] = useState(TabsType.market);
   const { balanceShort } = useWallet();
+
+  const TabsType = {
+    market: 0,
+    listings: 1,
+    inventory: 2,
+  };
+  
+  const TabsTypeNames = {
+    [0]: "Market",
+    [1]: "Listings",
+    [2]: "Inventory",
+  };
 
   const styleTabContainer = {
     position: "relative",
@@ -174,7 +147,7 @@ function Market() {
 
   // TODO: add buy functionality
   // const onClick = (event) => {
-  //   SALES.buy(BigNumber.from(artifact.idDec), {
+  //   MARKET.buy(BigNumber.from(artifact.idDec), {
   //     value: BigNumber.from(artifact.price),
   //   })
   //     .then(() => { /* TODO: ensure item moves from Market to Inventory */})
@@ -218,8 +191,8 @@ function Listings() {
 
   // TODO: Add unlist functionality
   // function unlist (event) {
-  //   SALES.unlist(BigNumber.from(artifact.idDec))
-  //     .then(() => { /* TODO: ensure sales list updates */  })
+  //   MARKET.unlist(BigNumber.from(artifact.idDec))
+  //     .then(() => { /* TODO: ensure market list updates */  })
   //     .catch(console.log); // catch error (in case of tx failure or something else)
   // }
 
@@ -255,7 +228,7 @@ function Inventory() {
 
   // TODO: add list functionality
   // const onClick = (event) => {
-  //   SALES.list(
+  //   MARKET.list(
   //     BigNumber.from(artifact.idDec),
   //     utils.parseEther(value.toString())
   //   )
@@ -446,58 +419,38 @@ function Button({ children, style, theme = "default", onClick }) {
     </button>
   `;
 }
+// #endregion
 
-function styleButton(theme, isActive) {
-  const styleBase = {
-    padding: "2px 8px",
-    border: 0,
-    color: isActive ? Colors.gray.dfblack : Colors.gray,
-    outline: "none",
-  };
+// #region Hooks
+function useWindowCache () {
+  const [cache, setCache] = useState(window[CACHE_KEY])
+  const [cache, setCache] = useState(window[CACHE_KEY])
 
-  return { ...styleBase, ...themeButton(theme, isActive) };
-}
+  useEffect(() => {
+    if (!cache) {
+      const marketABI = await fetch(MARKET_ABI).then((res) => res.json());
+      const marketContract = await df.loadContract(MARKET_ADDRESS, marketABI);
+      const artifactsABI = await fetch(MARKET_ABI).then((res) => res.json());
+      const artifacts = await df.loadContract(ARTIFACTS_ADDRESS, artifactsABI);  
+    }
+  }, [])
 
-function themeButton(theme, isActive) {
-  switch (theme) {
-    case "blue":
-    case "info":
-      return {
-        background: isActive ? Colors.dfblue : Colors.backgrounddark,
-      };
-    case "yellow":
-    case "warning":
-      return {
-        background: isActive ? Colors.dfyellow : Colors.backgrounddark,
-      };
-    case "green":
-    case "success":
-      return {
-        background: isActive ? Colors.dfgreen : Colors.backgrounddark,
-      };
-    case "red":
-    case "danger":
-      return {
-        background: isActive ? Colors.dfgreen : Colors.backgrounddark,
-      };
-    case "gray":
-    case "default":
-    default:
-      return {
-        background: isActive ? Colors.muted : Colors.backgrounddark,
-      };
+  return {
+    data: null,
+    loading: null,
+    error: null,
   }
 }
 
-// Wallet functionality
-function getMyBalance() {
-  return df.getMyBalanceEth();
+function useMarketContract() {
+  
+  const market = window[CACHE_KEY].
 }
 
-// This contains a terrible hack around bad APIs
-// getMyBalance$() emitter emits BigNumbers instead of the same type as returned by getMyBalance()
-export function subscribeToMyBalance(cb) {
-  return df.getMyBalance$().subscribe(() => cb(getMyBalance()));
+function useArtifactsContract() {
+  
+  // Approve the market for all tokens
+  // ARTIFACTS.setApprovalForAll(MARKET_ADDRESS, true).catch(console.log)
 }
 
 function useWallet() {
@@ -562,7 +515,7 @@ function useSubgraph() {
 
 function fetchListings() {
   // gets from shop subgraph
-  return fetch(MARKET_GRAPH_URL, {
+  return fetch(MARKET_GRAPH_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -585,7 +538,7 @@ function fetchListings() {
 
 function fetchArtifacts() {
   // gets from df subgraph
-  return fetch(DF_GRAPH_URL, {
+  return fetch(DARKFOREST_GRAPH_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -605,7 +558,7 @@ function fetchArtifacts() {
           defenseMultiplier
         }
         
-        shopartifacts: artifacts(where:{owner:"${SALES_CONTRACT_ADDRESS.toLowerCase()}"}){
+        shopartifacts: artifacts(where:{owner:"${MARKET_ADDRESS.toLowerCase()}"}){
           idDec
           id
           rarity
@@ -621,6 +574,60 @@ function fetchArtifacts() {
     }),
   });
 }
+// #endregion
+
+// #region Style Helpers
+function styleButton(theme, isActive) {
+  const styleBase = {
+    padding: "2px 8px",
+    border: 0,
+    color: isActive ? Colors.gray.dfblack : Colors.gray,
+    outline: "none",
+  };
+
+  return { ...styleBase, ...themeButton(theme, isActive) };
+}
+
+function themeButton(theme, isActive) {
+  switch (theme) {
+    case "blue":
+    case "info":
+      return {
+        background: isActive ? Colors.dfblue : Colors.backgrounddark,
+      };
+    case "yellow":
+    case "warning":
+      return {
+        background: isActive ? Colors.dfyellow : Colors.backgrounddark,
+      };
+    case "green":
+    case "success":
+      return {
+        background: isActive ? Colors.dfgreen : Colors.backgrounddark,
+      };
+    case "red":
+    case "danger":
+      return {
+        background: isActive ? Colors.dfgreen : Colors.backgrounddark,
+      };
+    case "gray":
+    case "default":
+    default:
+      return {
+        background: isActive ? Colors.muted : Colors.backgrounddark,
+      };
+  }
+}
+
+// convert key to match df format, return color
+function rarityColor(key) {
+  const rarity = key[0] + key.toLowerCase().slice(1, key.length); // COMMON => Common
+  const rarityId = ArtifactRarity[rarity];
+  return RarityColors[rarityId];
+}
+// #endregion
+
+// #region Format Helpers
 
 // function for properly formatting the artifacts stats
 function formatMultiplier(value) {
@@ -635,13 +642,6 @@ function formatMultiplierColor(value) {
   return Colors.dfred;
 }
 
-// convert key to match df format, return color
-function rarityColor(key) {
-  const rarity = key[0] + key.toLowerCase().slice(1, key.length); // COMMON => Common
-  const rarityId = ArtifactRarity[rarity];
-  return RarityColors[rarityId];
-}
-
 // convert uppercase artifactType to properly formatted name
 function artifactName(name) {
   const typeID = Object.keys(ArtifactType).find(
@@ -650,5 +650,38 @@ function artifactName(name) {
   const artifactId = ArtifactType[typeID];
   return ArtifactTypeNames[artifactId];
 }
+// #endregion
+
+// #region Wallet Helpers
+function getMyBalance() {
+  return df.getMyBalanceEth();
+}
+
+// This contains a terrible hack around bad APIs
+// getMyBalance$() emitter emits BigNumbers instead of the same type as returned by getMyBalance()
+function subscribeToMyBalance(cb) {
+  return df.getMyBalance$().subscribe(() => cb(getMyBalance()));
+}
+// #endregion
+
+// #region Plugin
+class Plugin {
+  constructor() {
+    this.container = null;
+  }
+
+  render(container) {
+    this.container = container;
+    this.container.style.width = "512px";
+    this.container.style.height = "384px";
+    this.container.style.padding = 0;
+    render(html`<${App} />`, container);
+  }
+
+  destroy() {
+    render(null, this.container);
+  }
+}
+// #endregion
 
 export default Plugin;
