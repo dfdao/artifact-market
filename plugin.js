@@ -142,16 +142,16 @@ function App() {
   };
 
   const styleTab = (isActive) => ({
-    color: isActive ? Colors.dfblue : Colors.muted,
+    color: isActive ? Colors.dfwhite : Colors.muted,
     background: Colors.background,
   });
 
   return html`
     <div style=${styleTabContainer}>
       <div style=${styleTabContent}>
-        ${TabsType.market === activeTab && html`<p>market</p>`}
-        ${TabsType.inventory === activeTab && html`<${Market} />`}
-        ${TabsType.activity === activeTab && html`<p>activity</p>`}
+        ${TabsType.market === activeTab && html`<${Market} />`}
+        ${TabsType.inventory === activeTab && html`<${Inventory} />`}
+        ${TabsType.activity === activeTab && html`<${Activity} />`}
       </div>
       <div style=${styleTabs}>
         <${Button}
@@ -175,16 +175,49 @@ function App() {
   `;
 }
 
-// navigation: inventory, market, activity
-
 function Market() {
   const { data, loading, error } = useSubgraph();
-  console.log(data, loading, error);
-
   const artifactsStyle = {
     display: "grid",
     width: "100%",
-    padding: "8px 16px",
+    padding: "8px",
+    gridRowGap: "16px",
+  };
+
+  if (loading) return html`<${Loading} />`;
+
+  if (error)
+    return html`
+      <div>
+        <h1>Something went wrong...</h1>
+        <p>${JSON.stringify(error, null, 2)}</p>
+      </div>
+    `;
+
+  return html`
+    <div style=${artifactsStyle}>
+      <${Artifacts}
+        title="Your Listed Artifacts"
+        empty="You don't currently have any artifacts listed."
+        artifacts=${data.artifactsListed}
+      />
+      <${Artifacts}
+        title="Artifacts For Sale"
+        empty="There aren't currently any artifacts listed for sale."
+        action="buy"
+        price="1.0"
+        artifacts=${data.artifactsForSale}
+      />
+    </div>
+  `;
+}
+
+function Inventory() {
+  const { data, loading, error } = useSubgraph();
+  const artifactsStyle = {
+    display: "grid",
+    width: "100%",
+    padding: "8px",
     gridRowGap: "16px",
   };
 
@@ -206,18 +239,21 @@ function Market() {
         action="sell"
         artifacts=${data.artifactsOwned}
       />
-      <${Artifacts}
-        title="Your Listed Artifacts"
-        empty="You don't currently have any artifacts listed."
-        artifacts=${data.artifactsListed}
-      />
-      <${Artifacts}
-        title="Artifacts For Sale"
-        empty="There aren't currently any artifacts listed for sale."
-        action="buy"
-        price="1.0"
-        artifacts=${data.artifactsForSale}
-      />
+    </div>
+  `;
+}
+
+function Activity() {
+  const styleActivity = {
+    display: "grid",
+    width: "100%",
+    padding: "8px",
+    gridRowGap: "16px",
+  };
+
+  return html`
+    <div style=${styleActivity}>
+      <h1>Activity</h1>
     </div>
   `;
 }
