@@ -156,18 +156,6 @@ function Artifact({ artifact, price, action }) {
     border: "1px solid rgb(95, 95, 95)",
     width: 42,
     padding: "0 2px",
-    "::-webkit-outer-spin-button": {
-      WebkitAppearance: "none",
-      margin: 0,
-    },
-    "::-webkit-inner-spin-button": {
-      WebkitAppearance: "none",
-      margin: 0,
-    },
-    "::-webkit-inner-spin-button": {},
-    "[type=number]": {
-      "-moz-appearance": "textfield",
-    },
   };
 
   const InputMockup = () => {
