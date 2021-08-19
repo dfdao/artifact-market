@@ -40,6 +40,7 @@ const Colors = {
   background: "#151515",
   backgrounddark: "#252525",
   border: "#777",
+  borderlight: "#5f5f5f",
   blueBackground: "#0a0a23",
   dfblue: "#00ADE1",
   dfgreen: "#00DC82",
@@ -98,11 +99,75 @@ function artifactName(name) {
   return ArtifactTypeNames[artifactId];
 }
 
+const TabsType = {
+  inventory: 0,
+  market: 1,
+  activity: 2,
+};
+
+const TabsTypeNames = {
+  [0]: "inventory",
+  [1]: "market",
+  [2]: "activity",
+};
+
 function App() {
-  return html`<${Market} />`;
+  const [activeTab, setActiveTab] = useState(TabsType.inventory);
+  const styleTabContainer = {
+    position: "relative",
+    height: "100%",
+  };
+  const styleTabContent = {
+    paddingBottom: "44px",
+    height: "100%",
+    overflowY: "scroll",
+  };
+  const styleTabs = {
+    display: "grid",
+    position: "absolute",
+    padding: "8px",
+    background: Colors.background,
+    gridColumnGap: "8px",
+    gridAutoFlow: "column",
+    width: "100%",
+    borderTop: `1px solid ${Colors.borderlight}`,
+    bottom: 0,
+  };
+
+  const styleTab = (isActive) => ({
+    color: isActive ? Colors.dfblue : Colors.gray,
+    background: Colors.background,
+  });
+
+  return html`
+    <div style=${styleTabContainer}>
+      <div style=${styleTabContent}>
+        ${TabsType.inventory === activeTab && html`<${Market} />`}
+        ${TabsType.market === activeTab && html`<p>market</p>`}
+        ${TabsType.activity === activeTab && html`<p>activity</p>`}
+      </div>
+      <div style=${styleTabs}>
+        <${Button}
+          style=${styleTab(TabsType.inventory === activeTab)}
+          onClick=${() => setActiveTab(TabsType.inventory)}
+          children=${TabsTypeNames[0]}
+        />
+        <${Button}
+          style=${styleTab(TabsType.market === activeTab)}
+          onClick=${() => setActiveTab(TabsType.market)}
+          children=${TabsTypeNames[1]}
+        />
+        <${Button}
+          style=${styleTab(TabsType.activity === activeTab)}
+          onClick=${() => setActiveTab(TabsType.activity)}
+          children=${TabsTypeNames[2]}
+        />
+      </div>
+    </div>
+  `;
 }
 
-// navigation: inventory, market, history
+// navigation: inventory, market, activity
 
 function Market() {
   const { data, loading, error } = useSubgraph();
@@ -302,7 +367,7 @@ function Button({ children, style, theme = "default", onClick }) {
 
   return html`
     <button
-      style=${{ ...style, ...styleButton(theme, isActive) }}
+      style=${{ ...styleButton(theme, isActive), ...style }}
       onMouseEnter=${() => setIsActive(true)}
       onMouseLeave=${() => setIsActive(false)}
       onClick=${onClick}
