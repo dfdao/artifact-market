@@ -100,19 +100,19 @@ function artifactName(name) {
 }
 
 const TabsType = {
-  inventory: 0,
-  market: 1,
+  market: 0,
+  inventory: 1,
   activity: 2,
 };
 
 const TabsTypeNames = {
-  [0]: "inventory",
-  [1]: "market",
-  [2]: "activity",
+  [0]: "Market",
+  [1]: "Inventory",
+  [2]: "Activity",
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState(TabsType.inventory);
+  const [activeTab, setActiveTab] = useState(TabsType.market);
   const styleTabContainer = {
     position: "relative",
     height: "100%",
@@ -126,12 +126,13 @@ function App() {
     display: "grid",
     position: "absolute",
     padding: "8px",
-    background: Colors.background,
     gridColumnGap: "8px",
     gridAutoFlow: "column",
-    width: "100%",
-    borderTop: `1px solid ${Colors.borderlight}`,
+    justifyContent: "flex-start",
     bottom: 0,
+    width: "100%",
+    background: Colors.background,
+    borderTop: `1px solid ${Colors.borderlight}`,
   };
 
   const styleTab = (isActive) => ({
@@ -142,19 +143,19 @@ function App() {
   return html`
     <div style=${styleTabContainer}>
       <div style=${styleTabContent}>
-        ${TabsType.inventory === activeTab && html`<${Market} />`}
         ${TabsType.market === activeTab && html`<p>market</p>`}
+        ${TabsType.inventory === activeTab && html`<${Market} />`}
         ${TabsType.activity === activeTab && html`<p>activity</p>`}
       </div>
       <div style=${styleTabs}>
         <${Button}
-          style=${styleTab(TabsType.inventory === activeTab)}
-          onClick=${() => setActiveTab(TabsType.inventory)}
+          style=${styleTab(TabsType.market === activeTab)}
+          onClick=${() => setActiveTab(TabsType.market)}
           children=${TabsTypeNames[0]}
         />
         <${Button}
-          style=${styleTab(TabsType.market === activeTab)}
-          onClick=${() => setActiveTab(TabsType.market)}
+          style=${styleTab(TabsType.inventory === activeTab)}
+          onClick=${() => setActiveTab(TabsType.inventory)}
           children=${TabsTypeNames[1]}
         />
         <${Button}
@@ -382,6 +383,7 @@ function styleButton(theme, isActive) {
     padding: "2px 8px",
     border: 0,
     color: isActive ? Colors.gray.dfblack : Colors.gray,
+    outline: "none",
   };
 
   return { ...styleBase, ...themeButton(theme, isActive) };
