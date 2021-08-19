@@ -32,6 +32,9 @@ const TOKENS = await df.loadContract(
   TOKENS_APPROVAL_ABI
 );
 
+// Approve the market for all tokens
+// TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS, true).catch(console.log)
+
 // Dark Forest Helpers - ideally these would be imported from cdn
 
 const Colors = {
@@ -193,6 +196,18 @@ function Market() {
     gridRowGap: "16px",
   };
 
+  // TODO: add buy functionality
+  // const onClick = (event) => {
+  //   SALES.buy(BigNumber.from(artifact.idDec), {
+  //     value: BigNumber.from(artifact.price),
+  //   })
+  //     .then(() => { /* TODO: ensure item moves from Market to Inventory */})
+  //     .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
+  // };
+
+  // TODO: add sale price
+  // utils.formatEther(artifact.price)
+
   if (loading) return html`<${Loading} />`;
 
   if (error)
@@ -225,6 +240,13 @@ function Listings() {
     gridRowGap: "16px",
   };
 
+  // TODO: Add unlist functionality
+  // function unlist (event) {
+  //   SALES.unlist(BigNumber.from(artifact.idDec))
+  //     .then(() => { /* TODO: ensure sales list updates */  })
+  //     .catch(console.log); // catch error (in case of tx failure or something else)
+  // }
+
   if (loading) return html`<${Loading} />`;
 
   if (error)
@@ -254,6 +276,16 @@ function Inventory() {
     padding: "8px",
     gridRowGap: "16px",
   };
+
+  // TODO: add list functionality
+  // const onClick = (event) => {
+  //   SALES.list(
+  //     BigNumber.from(artifact.idDec),
+  //     utils.parseEther(value.toString())
+  //   )
+  //     .then(() => { /* TODO: ensure item moves from inventory to Listings */})
+  //     .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
+  // };
 
   if (loading) return html`<${Loading} />`;
 
@@ -492,6 +524,7 @@ function themeButton(theme, isActive) {
   }
 }
 
+// Wallet functionality
 function getMyBalance() {
   return df.getMyBalanceEth();
 }
@@ -635,320 +668,6 @@ function formatMultiplierColor(value) {
   if (value === 100) return Colors.muted;
   if (value > 100) return Colors.dfgreen;
   return Colors.dfred;
-}
-
-function myListedRow(artifact) {
-  const onClick = (event) => {
-    SALES.unlist(BigNumber.from(artifact.idDec))
-      .then(() => {
-        // unlist the token
-        event.target.parentNode.parentNode.parentNode.parentNode.removeChild(
-          event.target.parentNode.parentNode.parentNode
-        ); // delete the row
-        alert("unlisted!");
-      })
-      .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
-  };
-
-  const row = document.createElement("tr");
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: `${artifact.rarity} ${artifact.artifactType}`,
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.energyCapMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.energyGrowthMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.rangeMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.speedMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.defenseMultiplier),
-    })
-  );
-  row.appendChild(createElement({ type: "td" })).appendChild(
-    createElement({
-      type: "button",
-      text: "Unlist",
-      eventListeners: [["click", onClick]],
-    })
-  );
-  return row;
-}
-
-// Creates one row in the table of the users withdrawn artifacts
-function myRow(artifact) {
-  let value; //  the price at which the token will be listed at
-  const onClick = (event) => {
-    SALES.list(
-      BigNumber.from(artifact.idDec),
-      utils.parseEther(value.toString())
-    )
-      .then(() => {
-        // list the token for the price that was input
-        event.target.parentNode.parentNode.parentNode.parentNode.removeChild(
-          event.target.parentNode.parentNode.parentNode
-        ); // delete the row
-        alert("listed!");
-      })
-      .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
-  };
-
-  const onChange = (event) => {
-    // function to handle when the input value gets changed
-    value = event.target.value;
-  };
-
-  const row = document.createElement("tr");
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: `${artifact.rarity} ${artifact.artifactType}`,
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.energyCapMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.energyGrowthMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.rangeMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.speedMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.defenseMultiplier),
-    })
-  );
-  row
-    .appendChild(createElement({ type: "td" }))
-    .appendChild(document.createElement("div"))
-    .appendChild(
-      createElement({
-        type: "input",
-        eventListeners: [["change", onChange]],
-        attributes: [
-          ["type", "number"],
-          ["min", 0],
-          ["step", 0.01],
-          ["size", 4],
-        ],
-      })
-    )
-    .parentNode.appendChild(
-      createElement({
-        type: "button",
-        eventListeners: [["click", onClick]],
-        text: "List",
-      })
-    );
-
-  return row;
-}
-
-// Creates one row in the table of the stores listed artifacts
-function saleRow(artifact) {
-  const onClick = (event) => {
-    SALES.buy(BigNumber.from(artifact.idDec), {
-      value: BigNumber.from(artifact.price),
-    })
-      .then(() => {
-        // buys the artifact
-        event.target.parentNode.parentNode.parentNode.removeChild(
-          event.target.parentNode.parentNode
-        ); // delete the row
-        alert("bought!");
-      })
-      .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
-  };
-  const row = document.createElement("tr");
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: `${artifact.rarity} ${artifact.artifactType}`,
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.energyCapMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.energyGrowthMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.rangeMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.speedMultiplier),
-    })
-  );
-  row.appendChild(
-    createElement({
-      type: "td",
-      text: formatMultiplier(artifact.defenseMultiplier),
-    })
-  );
-  row
-    .appendChild(createElement({ type: "td" }))
-    .appendChild(
-      createElement({
-        type: "div",
-        text: `price: ${utils.formatEther(artifact.price)} XDAI`,
-        css: [["fontSize", "70%"]],
-      })
-    )
-    .parentNode.appendChild(
-      createElement({
-        type: "button",
-        text: "Buy",
-        eventListeners: [["click", onClick]],
-      })
-    );
-
-  return row;
-}
-
-// Creates the table of the users withdrawn artifacts
-// TODO: this should have a fixed size and any columns that do not fit should be viewable by scrolling
-function myTable(data) {
-  const table = document.createElement("table");
-  table.appendChild(createElement({ type: "caption", text: "My Artifacts" }));
-  table
-    .appendChild(document.createElement("thead"))
-    .appendChild(document.createElement("tr"))
-    .appendChild(createElement({ type: "th", text: "Artifact" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Cap" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Growth" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Range" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Speed" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Defense" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "List" }));
-
-  if (data) {
-    // pretty sure I don't need to do this check
-    const footer = table.appendChild(document.createElement("tfoot"));
-    footer.appendChild(document.createElement("tr")).appendChild(
-      createElement({
-        type: "th",
-        text: "My listings",
-        attributes: [["colspan", 7]],
-      })
-    );
-
-    const body = table.appendChild(document.createElement("tbody"));
-    for (let artifact of data.myartifacts) {
-      body.appendChild(myRow(artifact));
-    }
-    for (let artifact of data.mylistedartifacts) {
-      footer.appendChild(myListedRow(artifact));
-    }
-  }
-  return table;
-}
-
-// Creates the table of the stores listed artifacts
-// TODO: this should have a fixed size and any columns that do not fit should be viewable by scrolling
-function saleTable(data) {
-  const table = document.createElement("table");
-  table.appendChild(
-    createElement({ type: "caption", text: "Store Artifacts" })
-  );
-  table
-    .appendChild(document.createElement("thead"))
-    .appendChild(document.createElement("tr"))
-    .appendChild(createElement({ type: "th", text: "Artifact" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Cap" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Growth" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Range" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Speed" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Defense" }))
-    .parentNode.appendChild(createElement({ type: "th", text: "Buy" }));
-  if (data) {
-    // pretty sure I don't need to do this check
-    const body = table.appendChild(document.createElement("tbody"));
-    for (let artifact of data.shopartifacts) {
-      body.appendChild(saleRow(artifact));
-    }
-  }
-  return table;
-}
-
-// special buttons for approving the contract and refreshing
-
-async function specialButtons(container, plugin) {
-  const approve = () => {
-    TOKENS.setApprovalForAll(SALES_CONTRACT_ADDRESS, true).catch((e) =>
-      console.log(e)
-    ); // this will approve the market for all tokens
-  };
-  const refresh = async () => {
-    // re-renders the whole container with the latest subgraph data
-    plugin.destroy();
-    await plugin.render(container);
-  };
-  const div = document.createElement("div");
-  div.appendChild(
-    createElement({
-      type: "button",
-      text: "approve",
-      eventListeners: [["click", approve]],
-    })
-  ); // approve button
-  div.appendChild(
-    createElement({
-      type: "button",
-      text: "refresh",
-      eventListeners: [["click", refresh]],
-    })
-  ); // refresh button
-  return div;
 }
 
 export default Plugin;
