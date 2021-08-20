@@ -15,7 +15,7 @@ import { BigNumber, utils } from "https://cdn.skypack.dev/ethers";
 // market contract on blockscout: https://blockscout.com/poa/xdai/address/0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8
 // when a new round starts APPROVAL_ADDRESS must be updated
 const APPROVAL_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
-const MARKET_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8";
+const MARKET_ADDRESS = "0x1e7cb1dbC6DaD80c86e8918382107238fb4562a8";
 const MARKET_ABI =
   "https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json";
 const APPROVAL_ABI =
