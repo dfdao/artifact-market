@@ -600,7 +600,7 @@ function Inventory() {
     <div style=${artifactsStyle}>
       <${Artifacts}
         title="Your Artifacts"
-        empty="You don't currently have any artifacts."
+        empty="You don't currently have any artifacts in your inventory. Withdraw them from spacetime rips or buy some from the market."
         action="sell"
         artifacts=${artifacts}
       />
