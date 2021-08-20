@@ -19,7 +19,7 @@ const MARKET_ADDRESS = "0x1e7cb1dbC6DaD80c86e8918382107238fb4562a8";
 const MARKET_ABI =
   "https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json";
 const APPROVAL_ABI =
-  "https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json";
+  "https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/283098b02d906488796441f38f94c6d7d513c797/APPROVAL_ABI.json";
 const CACHE_KEY = "ARTIFACT-MARKET";
 const APPROVAL_KEY = "APPROVAL-CONTRACT";
 const MARKET_KEY = "MARKET-CONTRACT";
