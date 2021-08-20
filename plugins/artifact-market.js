@@ -78,32 +78,17 @@ const TabsTypeNames = {
 
 // #region Components
 function Loading() {
-  const loadingStyle = {
-    display: "grid",
-    width: "100%",
-    minHeight: "100%",
-    placeContent: "center",
-  };
+  const [indicator, setIndicator] = useState("");
+  useEffect(() => {
+    let timeout = setTimeout(() => {
+      if (indicator.length === 10) setIndicator("");
+      else setIndicator(indicator + ". ");
+    }, 150); // wait before showing loader
 
-  return html`
-    <div style=${loadingStyle}>
-      <span class="Wrap-sc-1ehljia yxLrH">
-        <span class="Static-sc-1sdikul daiCTc">Loading</span>
-        <span class="Anim-sc-1s9k1th cicvbr">
-          <span class="AnimDelay-sc-170sl4v kzVTlq">L</span>
-          <span class="AnimDelay-sc-170sl4v cTQehp">o</span>
-          <span class="AnimDelay-sc-170sl4v gVukkp">a</span>
-          <span class="AnimDelay-sc-170sl4v gHvIwK">d</span>
-          <span class="AnimDelay-sc-170sl4v brzOHe">i</span>
-          <span class="AnimDelay-sc-170sl4v bYMvlb">n</span>
-          <span class="AnimDelay-sc-170sl4v efJVaj">g</span>
-          <span class="AnimDelay-sc-170sl4v ihobdj">.</span>
-          <span class="AnimDelay-sc-170sl4v fvBRDQ">.</span>
-          <span class="AnimDelay-sc-170sl4v fFXOk">.</span>
-        </span>
-      </span>
-    </div>
-  `;
+    return () => clearTimeout(timeout);
+  }, [indicator]);
+
+  return html` <div style=${{ padding: 8 }}>${indicator}</div> `;
 }
 
 function Artifacts({ title, empty, artifacts = [], price, action }) {
@@ -531,7 +516,7 @@ function useSubgraph() {
   const excludesToken = (token) => !includesToken(token);
   const withPrice = (token, i) => {
     // TODO: I need to make sure they are sorted the same way or else this won't work
-    const price = listings?.othertokens[i].price;
+    const price = listings?.othertokens[i]?.price;
     return { ...token, price };
   };
 
