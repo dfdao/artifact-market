@@ -175,7 +175,17 @@ function ArtifactHeaderButton({ children, style, isActive, onClick }) {
 
 function Artifacts({ empty, artifacts = [], price, action }) {
   const [sort, setSort] = useState(null);
-  // const byOption = (option) =>
+  const byOption = (a, b) => {
+    if (!sort) return rarityKey(b.rarity) - rarityKey(a.rarity);
+    const isReversed = sort.includes("Reverse");
+    const type = sort.replace("Reverse", "");
+    if (type === ArtifactSortType.type) {
+      if (a[type] < b[type]) return isReversed ? 1 : -1;
+      if (a[type] > b[type]) return isReversed ? -1 : 1;
+      return 0;
+    }
+    return isReversed ? a[type] - b[type] : b[type] - a[type];
+  };
 
   const artifactsStyle = {
     display: "grid",
@@ -187,15 +197,17 @@ function Artifacts({ empty, artifacts = [], price, action }) {
   };
 
   const artifactsChildren = artifacts.length
-    ? artifacts.map(
-        (artifact) =>
-          html`<${Artifact}
-            key=${artifact.id}
-            artifact=${artifact}
-            price=${price}
-            action=${action}
-          />`
-      )
+    ? artifacts
+        .sort(byOption)
+        .map(
+          (artifact) =>
+            html`<${Artifact}
+              key=${artifact.id}
+              artifact=${artifact}
+              price=${price}
+              action=${action}
+            />`
+        )
     : html`<p style=${emptyStyle}>${empty}</p>`;
 
   return html`
@@ -799,9 +811,12 @@ function themeButton(theme, isActive) {
 
 // convert key to match df format, return color
 function rarityColor(key) {
+  return Raritycolors[rarityKey(key)];
+}
+
+function rarityKey(key) {
   const rarity = key[0] + key.toLowerCase().slice(1, key.length); // COMMON => Common
-  const rarityId = ArtifactRarity[rarity];
-  return Raritycolors[rarityId];
+  return ArtifactRarity[rarity];
 }
 // #endregion
 
