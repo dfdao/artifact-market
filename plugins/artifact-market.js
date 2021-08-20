@@ -100,7 +100,7 @@ function Loading() {
   return html` <div style=${{ padding: 8 }}>${indicator}</div> `;
 }
 
-function ArtifactsHeader({ sort, setSort }) {
+function ArtifactsHeader({ sort, setSort, filter, setFilter }) {
   const color = (type) => {
     const reverse = `${type}Reverse`;
     if (sort === type) return colors.dfgreen;
@@ -117,6 +117,7 @@ function ArtifactsHeader({ sort, setSort }) {
 
   const artifactsHeaderStyle = {
     display: "grid",
+    marginBottom: "4px",
     gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1.75fr",
     gridColumnGap: "8px",
     textAlign: "center",
@@ -126,7 +127,7 @@ function ArtifactsHeader({ sort, setSort }) {
     <div style=${artifactsHeaderStyle}>
       <${ArtifactHeaderButton}
         style=${{
-          placeContent: "flext-start",
+          justifyContent: "flex-start",
           color: color(ArtifactSortType.type),
         }}
         onClick=${sortBy(ArtifactSortType.type)}
@@ -152,7 +153,14 @@ function ArtifactsHeader({ sort, setSort }) {
       <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.defense)}>
         <${DefenseSVG} color=${color(ArtifactSortType.defense)} />
       </${ArtifactHeaderButton} />
-      <div></div>
+
+      <${Input}
+        type="search"
+        placeholder="search"
+        value=${filter} 
+        onChange=${setFilter} 
+        style=${{ width: "100%" }}
+      />
     </div>
   `;
 }
@@ -161,7 +169,8 @@ function ArtifactHeaderButton({ children, style, isActive, onClick }) {
   const buttonStyle = {
     display: "flex",
     padding: 0,
-    placeContent: "flex-end",
+    justifyContent: "flex-end",
+    alignItems: "center",
     background: colors.background,
     ...style,
   };
@@ -175,7 +184,8 @@ function ArtifactHeaderButton({ children, style, isActive, onClick }) {
 
 function Artifacts({ empty, artifacts = [], price, action }) {
   const [sort, setSort] = useState(null);
-  const byOption = (a, b) => {
+  const [filter, setFilter] = useState("");
+  const bySort = (a, b) => {
     if (!sort) return rarityKey(b.rarity) - rarityKey(a.rarity);
     const isReversed = sort.includes("Reverse");
     const type = sort.replace("Reverse", "");
@@ -185,6 +195,13 @@ function Artifacts({ empty, artifacts = [], price, action }) {
       return 0;
     }
     return isReversed ? a[type] - b[type] : b[type] - a[type];
+  };
+
+  const byFilter = (artifact) => {
+    const letters = filter.toLowerCase();
+    const hasLetters = (text) => text.toLowerCase().includes(letters);
+    if (hasLetters(artifact.artifactType)) return true;
+    if (hasLetters(artifact.rarity)) return true;
   };
 
   const artifactsStyle = {
@@ -198,7 +215,8 @@ function Artifacts({ empty, artifacts = [], price, action }) {
 
   const artifactsChildren = artifacts.length
     ? artifacts
-        .sort(byOption)
+        .sort(bySort)
+        .filter(byFilter)
         .map(
           (artifact) =>
             html`<${Artifact}
@@ -213,7 +231,14 @@ function Artifacts({ empty, artifacts = [], price, action }) {
   return html`
     <div>
       ${!!artifacts.length &&
-      html`<${ArtifactsHeader} sort=${sort} setSort=${setSort} /> `}
+      html`
+        <${ArtifactsHeader}
+          sort=${sort}
+          setSort=${setSort}
+          filter=${filter}
+          setFilter=${setFilter}
+        />
+      `}
       <div style=${artifactsStyle}>${artifactsChildren}</div>
     </div>
   `;
@@ -230,31 +255,6 @@ function Artifact({ artifact, price, action }) {
   const artifactTypeStyle = {
     color: rarityColor(artifact.rarity),
     textAlign: "left",
-  };
-
-  const inputStyle = {
-    outline: "none",
-    background: "rgb(21, 21, 21)",
-    color: "rgb(131, 131, 131)",
-    borderRadius: "4px",
-    border: "1px solid rgb(95, 95, 95)",
-    width: 42,
-    padding: "0 2px",
-  };
-
-  const InputMockup = () => {
-    if (price)
-      return html`
-        <div>
-          <p>$${price}</p>
-        </div>
-      `;
-
-    return html`
-      <div>
-        <input style=${inputStyle} type="number" step="0.01" min="0.01" />
-      </div>
-    `;
   };
 
   return html`
@@ -288,7 +288,7 @@ function Artifact({ artifact, price, action }) {
       <div>
         <${Button}
           theme=${action === "buy" ? "green" : "yellow"}
-          style=${{ marginLeft: "8px" }}
+          style=${{ width: "100%" }}
           children=${action}
         />
       </div>
@@ -308,6 +308,29 @@ function Button({ children, style, theme = "default", onClick }) {
     >
       ${children}
     </button>
+  `;
+}
+
+function Input({ value, onChange, style, type = "text", step, min }) {
+  const inputStyle = {
+    outline: "none",
+    background: "rgb(21, 21, 21)",
+    color: "rgb(131, 131, 131)",
+    borderRadius: "4px",
+    border: "1px solid rgb(95, 95, 95)",
+    padding: "0 2px",
+    ...style,
+  };
+
+  return html`
+    <input
+      style=${inputStyle}
+      type=${type}
+      step=${step}
+      min=${min}
+      value=${value}
+      onInput=${(e) => onChange(e.target.value)}
+    />
   `;
 }
 // #endregion
