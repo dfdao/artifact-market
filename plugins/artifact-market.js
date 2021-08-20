@@ -232,8 +232,8 @@ function App() {
     position: "absolute",
     padding: "8px",
     gridColumnGap: "8px",
-    gridTemplateColumns: "auto auto auto 1fr",
     justifyContent: "flex-start",
+    gridTemplateColumns: "auto auto auto 1fr",
     alignItems: "center",
     bottom: 0,
     width: "100%",
@@ -241,7 +241,7 @@ function App() {
     borderTop: `1px solid ${Colors.borderlight}`,
   };
   const styleBalance = {
-    color: Colors.dfyellow,
+    color: Colors.dfmythic,
     textAlign: "right",
   };
 
@@ -273,7 +273,15 @@ function App() {
           onClick=${() => setActiveTab(TabsType.inventory)}
           children=${TabsTypeNames[2]}
         />
-        <span style=${styleBalance}>${balanceShort} xDai</span>
+        <div style=${{ textAlign: "right" }}>
+          <${Button}
+          style=${{ ...styleTab(), marginLeft: "auto", cursor: "auto" }}
+          children=${TabsTypeNames[2]}
+          disabled
+        >
+          ${balanceShort} xDai
+        </${Button}>
+        </div>
       </div>
     </div>
   `;
