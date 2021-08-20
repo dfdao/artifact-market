@@ -166,10 +166,10 @@ function ArtifactsHeader(props) {
 
       <${Input}
         type="search"
-        placeholder="search"
+        placeholder="search..."
         value=${props.filter} 
         onChange=${props.setFilter} 
-        style=${{ width: "100%" }}
+        style=${{ width: "100%", fontSize: 12 }}
       />
     </div>
   `;
@@ -326,14 +326,22 @@ function Button({ children, style, theme = "default", onClick }) {
   `;
 }
 
-function Input({ value, onChange, style, type = "text", step, min }) {
+function Input({
+  value,
+  onChange,
+  style,
+  type = "text",
+  placeholder = "",
+  step,
+  min,
+}) {
   const inputStyle = {
     outline: "none",
     background: "rgb(21, 21, 21)",
     color: "rgb(131, 131, 131)",
     borderRadius: "4px",
     border: "1px solid rgb(95, 95, 95)",
-    padding: "0 2px",
+    padding: "0 4px",
     ...style,
   };
 
@@ -344,6 +352,7 @@ function Input({ value, onChange, style, type = "text", step, min }) {
       step=${step}
       min=${min}
       value=${value}
+      placeholder=${placeholder}
       onInput=${(e) => onChange(e.target.value)}
     />
   `;
@@ -636,6 +645,10 @@ function useContract(KEY, ABI, ADDRESS) {
 
 function useMarketContract() {
   return useContract(MARKET_KEY, MARKET_ABI, MARKET_ADDRESS);
+}
+
+function useApprovalContract() {
+  return useContract(APPROVAL_KEY, APPROVAL_ABI, APPROVAL_ADDRESS);
 }
 
 function useMarket() {
