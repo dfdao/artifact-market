@@ -12,20 +12,16 @@ import {
 import { BigNumber, utils } from "https://cdn.skypack.dev/ethers";
 
 // #region Constants
-const SUBGRAPH_ENDPOINT = "https://api.thegraph.com/subgraphs/name";
-const DARKFOREST_GRAPH_ENDPOINT = `${SUBGRAPH_ENDPOINT}/darkforest-eth/dark-forest-v06-round-3`;
-const MARKET_GRAPH_ENDPOINT = `${SUBGRAPH_ENDPOINT}/zk-farts/dfartifactmarket`;
-
 // market contract on blockscout: https://blockscout.com/poa/xdai/address/0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8
-// when a new round starts ARTIFACTS_ADDRESS must be updated
-const ARTIFACTS_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
+// when a new round starts APPROVAL_ADDRESS must be updated
+const APPROVAL_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
 const MARKET_ADDRESS = "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8";
 const MARKET_ABI =
   "https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json";
-const ARTIFACTS_ABI =
+const APPROVAL_ABI =
   "https://gist.githubusercontent.com/zk-FARTs/d5d9f3fc450476b40fd12832298bb54c/raw/1cac7c4638ee5d766615afe4362e6ce80ed68067/APPROVAL_ABI.json";
 const CACHE_KEY = "ARTIFACT-MARKET";
-const ARTIFACTS_KEY = "ARTIFACTS-CONTRACT";
+const APPROVAL_KEY = "APPROVAL-CONTRACT";
 const MARKET_KEY = "MARKET-CONTRACT";
 
 // Dark Forest Helpers - ideally these would be imported from cdn
@@ -630,7 +626,7 @@ function useContract(KEY, ABI, ADDRESS) {
         .catch(setError);
       const contract = await df.loadContract(ADDRESS, abi).catch(setError);
 
-      updateCache({ [KEY]: { abi, contract } });
+      updateCache({ [KEY]: { abi, contract, address: ADDRESS } });
       setLoading(false);
     }
   }, []);
@@ -642,22 +638,20 @@ function useMarketContract() {
   return useContract(MARKET_KEY, MARKET_ABI, MARKET_ADDRESS);
 }
 
-function useArtifactsContract() {
-  return useContract(ARTIFACTS_KEY, ARTIFACTS_ABI, ARTIFACTS_ADDRESS);
-}
-
 function useMarket() {
   const marketContract = useMarketContract();
-  const subgraph = useSubgraph();
+  const account = marketContract.data?.address?.toLowerCase();
+  // TODO: get artifact prices from market contract via ethers
+  // marketContract.data?.abi
+  // marketContract.data?.contract
 
   return {
     data: {
-      artifactsForSale: subgraph.data?.artifactsForSale,
-      artifactsListed: subgraph.data?.artifactsListed,
+      artifacts: df.entityStore.getArtifactsOwnedBy(account),
       marketContract: marketContract.data,
     },
-    loading: marketContract.loading || subgraph.loading,
-    error: marketContract.error || subgraph.error,
+    loading: marketContract.loading,
+    error: marketContract.error,
   };
 }
 
@@ -676,117 +670,6 @@ function useWallet() {
   }, [setBalance]);
 
   return { balance, balanceShort: Number.parseFloat(balance).toFixed(2) };
-}
-
-// fetch subgraph data for token stats and prices
-// 1 problem with this: we can only see ~100 listed tokens and 100 tokens owned by the player
-function useSubgraph() {
-  const [listings, setListings] = useState(null);
-  const [artifacts, setArtifacts] = useState(null);
-  const [listingsError, setListingsError] = useState(null);
-  const [artifactsError, setArtifactsError] = useState(null);
-  const [listingsLoading, setListingsLoading] = useState(true);
-  const [artifactsLoading, setArtifactsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchListings()
-      .then((res) => res.json())
-      .then((json) => setListings(json.data))
-      .then(() => setListingsLoading(false))
-      .catch(setListingsError);
-  }, []);
-
-  useEffect(() => {
-    fetchArtifacts()
-      .then((res) => res.json())
-      .then((json) => setArtifacts(json.data))
-      .then(() => setArtifactsLoading(false))
-      .catch(setArtifactsError);
-  }, []);
-
-  // change from array of objects with 1 element(tokenID) to array of tokenID
-  const artifactsListedIds = listings?.mytokens.map((e) => e.tokenID) ?? "";
-  const includesToken = (token) => artifactsListedIds.includes(token.idDec);
-  const excludesToken = (token) => !includesToken(token);
-  const withPrice = (token, i) => {
-    // TODO: I need to make sure they are sorted the same way or else this won't work
-    const price = listings?.othertokens[i]?.price;
-    return { ...token, price };
-  };
-
-  return {
-    data: {
-      artifactsOwned: artifacts?.myartifacts,
-      artifactsListed: artifacts?.shopartifacts.filter(includesToken),
-      artifactsForSale: artifacts?.shopartifacts
-        .filter(excludesToken)
-        .map(withPrice),
-    },
-    loading: listingsLoading || artifactsLoading,
-    error: listingsError || artifactsError,
-  };
-}
-
-function fetchListings() {
-  // gets from shop subgraph
-  return fetch(MARKET_GRAPH_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: ` 
-        query getlistings{
-          othertokens: listedTokens( where:{owner_not: "${df.account}"}){
-            tokenID
-            price
-          }
-          mytokens: listedTokens( where:{owner: "${df.account}"}){
-            tokenID
-          }
-        }
-        `,
-    }),
-  });
-}
-
-function fetchArtifacts() {
-  // gets from df subgraph
-  return fetch(DARKFOREST_GRAPH_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: ` 
-      query getartifacts{
-        myartifacts: artifacts(where:{owner:"${df.account}"}){
-          idDec
-          id
-          rarity
-          artifactType
-          energyCapMultiplier
-          energyGrowthMultiplier
-          rangeMultiplier
-          speedMultiplier
-          defenseMultiplier
-        }
-        
-        shopartifacts: artifacts(where:{owner:"${MARKET_ADDRESS.toLowerCase()}"}){
-          idDec
-          id
-          rarity
-          artifactType
-          energyCapMultiplier
-          energyGrowthMultiplier
-          rangeMultiplier
-          speedMultiplier
-          defenseMultiplier
-        }
-      }
-    `,
-    }),
-  });
 }
 // #endregion
 
