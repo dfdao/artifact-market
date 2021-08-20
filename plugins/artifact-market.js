@@ -6,14 +6,14 @@ import {
 } from "https://unpkg.com/htm/preact/standalone.module.js";
 import {
   ArtifactRarity,
-  ArtifactType,
+  ArtifactRarityNames,
   ArtifactTypeNames,
 } from "http://cdn.skypack.dev/@darkforest_eth/types";
 import { BigNumber, utils } from "https://cdn.skypack.dev/ethers";
 
 // #region Constants
 const SUBGRAPH_ENDPOINT = "https://api.thegraph.com/subgraphs/name";
-const DARKFOREST_GRAPH_ENDPOINT = `${SUBGRAPH_ENDPOINT}/darkforest-eth/dark-forest-v06-round-2`;
+const DARKFOREST_GRAPH_ENDPOINT = `${SUBGRAPH_ENDPOINT}/darkforest-eth/dark-forest-v06-round-3`;
 const MARKET_GRAPH_ENDPOINT = `${SUBGRAPH_ENDPOINT}/zk-farts/dfartifactmarket`;
 
 // market contract on blockscout: https://blockscout.com/poa/xdai/address/0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8
@@ -78,10 +78,26 @@ const TabsTypeNames = {
 const ArtifactSortType = {
   type: "artifactType",
   energy: "energyCapMultiplier",
-  energyGrowth: "energyGrowthMultiplier",
+  energyGrowth: "energyGroMultiplier",
   range: "rangeMultiplier",
   speed: "speedMultiplier",
-  defense: "defenseMultiplier",
+  defense: "defMultiplier",
+};
+
+const StatIdx = {
+  EnergyCap: 0,
+  EnergyGro: 1,
+  Range: 2,
+  Speed: 3,
+  Defense: 4,
+};
+
+const StatNames = {
+  energyCapMultiplier: "EnergyCap",
+  energyGroMultiplier: "EnergyGro",
+  rangeMultiplier: "Range",
+  speedMultiplier: "Speed",
+  defMultiplier: "Defense",
 };
 // #endregion
 
@@ -100,19 +116,17 @@ function Loading() {
   return html` <div style=${{ padding: 8 }}>${indicator}</div> `;
 }
 
-function ArtifactsHeader({ sort, setSort, filter, setFilter }) {
+function ArtifactsHeader(props) {
   const color = (type) => {
-    const reverse = `${type}Reverse`;
-    if (sort === type) return colors.dfgreen;
-    if (sort === reverse) return colors.dfred;
+    if (props.sort === type && props.reverse) return colors.dfred;
+    if (props.sort === type) return colors.dfgreen;
     return colors.muted;
   };
 
   const sortBy = (type) => () => {
-    const reverse = `${type}Reverse`;
-    if (sort === type) return setSort(reverse);
-    if (sort === reverse) return setSort(null);
-    return setSort(type);
+    if (props.reverse) return props.clear();
+    if (props.sort === type) return props.setReverse(true);
+    return props.setSort(type);
   };
 
   const artifactsHeaderStyle = {
@@ -157,15 +171,15 @@ function ArtifactsHeader({ sort, setSort, filter, setFilter }) {
       <${Input}
         type="search"
         placeholder="search"
-        value=${filter} 
-        onChange=${setFilter} 
+        value=${props.filter} 
+        onChange=${props.setFilter} 
         style=${{ width: "100%" }}
       />
     </div>
   `;
 }
 
-function ArtifactHeaderButton({ children, style, isActive, onClick }) {
+function ArtifactHeaderButton({ children, style, onClick }) {
   const buttonStyle = {
     display: "flex",
     padding: 0,
@@ -182,26 +196,34 @@ function ArtifactHeaderButton({ children, style, isActive, onClick }) {
   `;
 }
 
-function Artifacts({ empty, artifacts = [], price, action }) {
+function Artifacts({ empty, artifacts = [], action }) {
   const [sort, setSort] = useState(null);
   const [filter, setFilter] = useState("");
-  const bySort = (a, b) => {
-    if (!sort) return rarityKey(b.rarity) - rarityKey(a.rarity);
-    const isReversed = sort.includes("Reverse");
-    const type = sort.replace("Reverse", "");
-    if (type === ArtifactSortType.type) {
-      if (a[type] < b[type]) return isReversed ? 1 : -1;
-      if (a[type] > b[type]) return isReversed ? -1 : 1;
-      return 0;
-    }
-    return isReversed ? a[type] - b[type] : b[type] - a[type];
+  const [reverse, setReverse] = useState(false);
+  const clear = () => {
+    setSort(null);
+    setReverse(false);
   };
 
-  const byFilter = (artifact) => {
+  const bySort = (a, b) => {
+    if (!sort) return b.rarity - a.rarity;
+    if (sort === ArtifactSortType.type) {
+      const nameA = ArtifactTypeNames[a[sort]];
+      const nameB = ArtifactTypeNames[b[sort]];
+      if (nameA < nameB) return reverse ? 1 : -1;
+      if (nameA > nameB) return reverse ? -1 : 1;
+      return 0;
+    }
+    const valA = formatMultiplierArtifact(a, sort);
+    const valB = formatMultiplierArtifact(b, sort);
+    return reverse ? valA - valB : valB - valA;
+  };
+
+  const byFilter = ({ artifactType, rarity }) => {
     const letters = filter.toLowerCase();
     const hasLetters = (text) => text.toLowerCase().includes(letters);
-    if (hasLetters(artifact.artifactType)) return true;
-    if (hasLetters(artifact.rarity)) return true;
+    if (hasLetters(ArtifactTypeNames[artifactType])) return true;
+    if (hasLetters(ArtifactRarityNames[rarity])) return true;
   };
 
   const artifactsStyle = {
@@ -222,7 +244,6 @@ function Artifacts({ empty, artifacts = [], price, action }) {
             html`<${Artifact}
               key=${artifact.id}
               artifact=${artifact}
-              price=${price}
               action=${action}
             />`
         )
@@ -237,6 +258,9 @@ function Artifacts({ empty, artifacts = [], price, action }) {
           setSort=${setSort}
           filter=${filter}
           setFilter=${setFilter}
+          reverse=${reverse}
+          setReverse=${setReverse}
+          clear=${clear}
         />
       `}
       <div style=${artifactsStyle}>${artifactsChildren}</div>
@@ -244,7 +268,7 @@ function Artifacts({ empty, artifacts = [], price, action }) {
   `;
 }
 
-function Artifact({ artifact, price, action }) {
+function Artifact({ artifact, action }) {
   const artifactStyle = {
     display: "grid",
     gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1.75fr",
@@ -253,38 +277,24 @@ function Artifact({ artifact, price, action }) {
   };
 
   const artifactTypeStyle = {
-    color: rarityColor(artifact.rarity),
+    color: Raritycolors[artifact.rarity],
     textAlign: "left",
   };
 
   return html`
     <div style=${artifactStyle}>
       <div style=${artifactTypeStyle}>
-        ${formatArtifactName(artifact.artifactType)}
+        ${ArtifactTypeNames[artifact.artifactType]}
       </div>
-      <div
-        style=${{ color: formatMultiplierColor(artifact.energyCapMultiplier) }}
-      >
-        ${formatMultiplier(artifact.energyCapMultiplier)}
-      </div>
-      <div
-        style=${{
-          color: formatMultiplierColor(artifact.energyGrowthMultiplier),
-        }}
-      >
-        ${formatMultiplier(artifact.energyGrowthMultiplier)}
-      </div>
-      <div style=${{ color: formatMultiplierColor(artifact.rangeMultiplier) }}>
-        ${formatMultiplier(artifact.rangeMultiplier)}
-      </div>
-      <div style=${{ color: formatMultiplierColor(artifact.speedMultiplier) }}>
-        ${formatMultiplier(artifact.speedMultiplier)}
-      </div>
-      <div
-        style=${{ color: formatMultiplierColor(artifact.defenseMultiplier) }}
-      >
-        ${formatMultiplier(artifact.defenseMultiplier)}
-      </div>
+      ${Array.from({ length: 5 }, (_, i) => i).map(
+        (val) => html`
+          <${UpgradeStatInfo}
+            upgrades=${[artifact.upgrade, artifact.timeDelayedUpgrade]}
+            stat=${val}
+            key=${val}
+          />
+        `
+      )}
       <div>
         <${Button}
           theme=${action === "buy" ? "green" : "yellow"}
@@ -293,6 +303,15 @@ function Artifact({ artifact, price, action }) {
         />
       </div>
     </div>
+  `;
+}
+
+function UpgradeStatInfo({ upgrades, stat }) {
+  const val = formatMultiplierValue({ upgrades, stat });
+  const text = formatMultiplierText({ upgrades, stat });
+
+  return html`
+    <div style=${{ color: formatMultiplierColor(val) }}>${text}</div>
   `;
 }
 
@@ -554,7 +573,7 @@ function Listings() {
 }
 
 function Inventory() {
-  const { data, loading, error } = useInventory();
+  const { artifacts } = useInventory();
   const artifactsStyle = {
     display: "grid",
     width: "100%",
@@ -572,23 +591,13 @@ function Inventory() {
   //     .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
   // };
 
-  if (loading) return html`<${Loading} />`;
-
-  if (error)
-    return html`
-      <div>
-        <h1>Something went wrong...</h1>
-        <p>${JSON.stringify(error, null, 2)}</p>
-      </div>
-    `;
-
   return html`
     <div style=${artifactsStyle}>
       <${Artifacts}
         title="Your Artifacts"
         empty="You don't currently have any artifacts."
         action="sell"
-        artifacts=${data.artifactsOwned}
+        artifacts=${artifacts}
       />
     </div>
   `;
@@ -653,16 +662,8 @@ function useMarket() {
 }
 
 function useInventory() {
-  const artifactsContract = useArtifactsContract();
-  const subgraph = useSubgraph();
-
   return {
-    data: {
-      artifactsOwned: subgraph.data?.artifactsOwned,
-      artifactsContract: artifactsContract.data,
-    },
-    loading: artifactsContract.loading || subgraph.loading,
-    error: artifactsContract.error || subgraph.error,
+    artifacts: df.entityStore.getArtifactsOwnedBy(df.account),
   };
 }
 
@@ -831,40 +832,50 @@ function themeButton(theme, isActive) {
       };
   }
 }
-
-// convert key to match df format, return color
-function rarityColor(key) {
-  return Raritycolors[rarityKey(key)];
-}
-
-function rarityKey(key) {
-  const rarity = key[0] + key.toLowerCase().slice(1, key.length); // COMMON => Common
-  return ArtifactRarity[rarity];
-}
 // #endregion
 
 // #region Format Helpers
+function getUpgradeStat(upgrade, stat) {
+  if (stat === StatIdx.EnergyCap) return upgrade.energyCapMultiplier;
+  else if (stat === StatIdx.EnergyGro) return upgrade.energyGroMultiplier;
+  else if (stat === StatIdx.Range) return upgrade.rangeMultiplier;
+  else if (stat === StatIdx.Speed) return upgrade.speedMultiplier;
+  else if (stat === StatIdx.Defense) return upgrade.defMultiplier;
+  else return upgrade.energyCapMultiplier;
+}
 
-// function for properly formatting the artifacts stats
-function formatMultiplier(value) {
-  if (value === 100) return `+0%`;
-  if (value > 100) return `+${value - 100}%`;
-  return `-${100 - value}%`;
+function formatMultiplierArtifact(artifact, statName) {
+  const upgrades = [artifact.upgrade, artifact.timeDelayedUpgrade];
+  const stat = StatIdx[StatNames[statName]];
+  return formatMultiplierValue({ upgrades, stat });
+}
+
+function formatMultiplierValue({ upgrades, stat }) {
+  // let mult = 100;
+
+  // for (const upgrade of upgrades) {
+  //   if (upgrade) {
+  //     mult *= getUpgradeStat(upgrade, stat) / 100;
+  //   }
+  // }
+
+  return upgrades.reduce((mult, upgrade) => {
+    if (upgrade) mult *= getUpgradeStat(upgrade, stat) / 100;
+    return mult;
+  }, 100);
+}
+
+function formatMultiplierText({ upgrades, stat }) {
+  const val = formatMultiplierValue({ upgrades, stat });
+  if (val === 100) return `+0%`;
+  if (val > 100) return `+${Math.round(val) - 100}%`;
+  return `-${100 - Math.round(val)}%`;
 }
 
 function formatMultiplierColor(value) {
   if (value === 100) return colors.muted;
   if (value > 100) return colors.dfgreen;
   return colors.dfred;
-}
-
-// convert uppercase artifactType to properly formatted name
-function formatArtifactName(name) {
-  const typeID = Object.keys(ArtifactType).find(
-    (key) => key.toUpperCase() === name
-  );
-  const artifactId = ArtifactType[typeID];
-  return ArtifactTypeNames[artifactId];
 }
 // #endregion
 
