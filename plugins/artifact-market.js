@@ -30,7 +30,7 @@ const MARKET_KEY = "MARKET-CONTRACT";
 
 // Dark Forest Helpers - ideally these would be imported from cdn
 
-const Colors = {
+const colors = {
   muted: "#838383",
   gray: "#aaaaaa",
   background: "#151515",
@@ -51,14 +51,14 @@ const Colors = {
   dfmythic: "#ff44b7",
 };
 
-// https://github.com/darkforest-eth/client/blob/00492e06b8acf378e7dacc1c02b8ede61481bba3/src/Frontend/Styles/Colors.tsx
-const RarityColors = {
-  [ArtifactRarity.Unknown]: Colors.dfblack,
-  [ArtifactRarity.Common]: Colors.muted,
-  [ArtifactRarity.Rare]: Colors.dfrare,
-  [ArtifactRarity.Epic]: Colors.dfepic,
-  [ArtifactRarity.Legendary]: Colors.dflegendary,
-  [ArtifactRarity.Mythic]: Colors.dfmythic,
+// https://github.com/darkforest-eth/client/blob/00492e06b8acf378e7dacc1c02b8ede61481bba3/src/Frontend/Styles/colors.tsx
+const Raritycolors = {
+  [ArtifactRarity.Unknown]: colors.dfblack,
+  [ArtifactRarity.Common]: colors.muted,
+  [ArtifactRarity.Rare]: colors.dfrare,
+  [ArtifactRarity.Epic]: colors.dfepic,
+  [ArtifactRarity.Legendary]: colors.dflegendary,
+  [ArtifactRarity.Mythic]: colors.dfmythic,
 };
 // #endregion
 
@@ -73,6 +73,15 @@ const TabsTypeNames = {
   [0]: "Market",
   [1]: "Listings",
   [2]: "Inventory",
+};
+
+const ArtifactSortType = {
+  type: "artifactType",
+  energy: "energyCapMultiplier",
+  energyGrowth: "energyGrowthMultiplier",
+  range: "rangeMultiplier",
+  speed: "speedMultiplier",
+  defense: "defenseMultiplier",
 };
 // #endregion
 
@@ -91,7 +100,83 @@ function Loading() {
   return html` <div style=${{ padding: 8 }}>${indicator}</div> `;
 }
 
-function Artifacts({ title, empty, artifacts = [], price, action }) {
+function ArtifactsHeader({ sort, setSort }) {
+  const color = (type) => {
+    const reverse = `${type}Reverse`;
+    if (sort === type) return colors.dfgreen;
+    if (sort === reverse) return colors.dfred;
+    return colors.muted;
+  };
+
+  const sortBy = (type) => () => {
+    const reverse = `${type}Reverse`;
+    if (sort === type) return setSort(reverse);
+    if (sort === reverse) return setSort(null);
+    return setSort(type);
+  };
+
+  const artifactsHeaderStyle = {
+    display: "grid",
+    gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1.75fr",
+    gridColumnGap: "8px",
+    textAlign: "center",
+  };
+
+  return html`
+    <div style=${artifactsHeaderStyle}>
+      <${ArtifactHeaderButton}
+        style=${{
+          placeContent: "flext-start",
+          color: color(ArtifactSortType.type),
+        }}
+        onClick=${sortBy(ArtifactSortType.type)}
+        children="Artifact"
+      />
+
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.energy)}>
+        <${EnergySVG} color=${color(ArtifactSortType.energy)} />
+      </${ArtifactHeaderButton} />
+
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.energyGrowth)}>
+        <${EnergyGrowthSVG} color=${color(ArtifactSortType.energyGrowth)} />
+      </${ArtifactHeaderButton} />
+
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.range)}>
+        <${RangeSVG} color=${color(ArtifactSortType.range)} />
+      </${ArtifactHeaderButton} />
+      
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.speed)}>
+        <${SpeedSVG} color=${color(ArtifactSortType.speed)} />
+      </${ArtifactHeaderButton} />
+
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.defense)}>
+        <${DefenseSVG} color=${color(ArtifactSortType.defense)} />
+      </${ArtifactHeaderButton} />
+      <div></div>
+    </div>
+  `;
+}
+
+function ArtifactHeaderButton({ children, style, isActive, onClick }) {
+  const buttonStyle = {
+    display: "flex",
+    padding: 0,
+    placeContent: "flex-end",
+    background: colors.background,
+    ...style,
+  };
+
+  return html`
+    <${Button} style=${buttonStyle} onClick=${onClick}>
+      ${children}
+    </${Button}>
+  `;
+}
+
+function Artifacts({ empty, artifacts = [], price, action }) {
+  const [sort, setSort] = useState(null);
+  // const byOption = (option) =>
+
   const artifactsStyle = {
     display: "grid",
     gridRowGap: "4px",
@@ -115,6 +200,8 @@ function Artifacts({ title, empty, artifacts = [], price, action }) {
 
   return html`
     <div>
+      ${!!artifacts.length &&
+      html`<${ArtifactsHeader} sort=${sort} setSort=${setSort} /> `}
       <div style=${artifactsStyle}>${artifactsChildren}</div>
     </div>
   `;
@@ -123,7 +210,7 @@ function Artifacts({ title, empty, artifacts = [], price, action }) {
 function Artifact({ artifact, price, action }) {
   const artifactStyle = {
     display: "grid",
-    gridTemplateColumns: "2.6fr 1fr 1fr 1fr 1fr 1fr auto",
+    gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1.75fr",
     gridColumnGap: "8px",
     textAlign: "right",
   };
@@ -213,6 +300,73 @@ function Button({ children, style, theme = "default", onClick }) {
 }
 // #endregion
 
+// #region Icons
+const DefaultSVG = ({ children, width, height }) => html`
+  <svg
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    width="16px"
+    height="16px"
+    viewBox=${`0 0 ${height || 512} ${width || 512}`}
+  >
+    ${children}
+  </svg>
+`;
+
+const EnergySVG = ({ color }) => html`
+  <${DefaultSVG}>
+    <path
+      style=${{ fill: color || colors.muted }}
+      d="M352 0l-288 288h176l-80 224 288-288h-176z"
+    ></path>
+  </${DefaultSVG}>
+`;
+
+const EnergyGrowthSVG = ({ color }) => html`
+  <${DefaultSVG}>
+    <path
+      style=${{ fill: color || colors.muted }}
+      d="M251.6,164.4L416,0l-75,210H234.8L251.6,164.4z M407.4,224L284.2,343.4L224,512l288-288H407.4z"
+    />
+    <path
+      style=${{ fill: color || colors.muted }}
+      d="M288,0L0,288h176L96,512l288-288H208L288,0z"
+    />
+  </${DefaultSVG}>
+`;
+
+const RangeSVG = ({ color }) => html`
+  <${DefaultSVG}>
+    <path
+      style=${{ fill: color || colors.muted }}
+      d="M118.627 438.627l265.373-265.372v114.745c0 17.673 14.327 32 32 32s32-14.327 32-32v-192c0-12.942-7.797-24.611-19.754-29.563-3.962-1.642-8.121-2.42-12.246-2.419v-0.018h-192c-17.673 0-32 14.327-32 32 0 17.674 14.327 32 32 32h114.745l-265.372 265.373c-6.249 6.248-9.373 14.438-9.373 22.627s3.124 16.379 9.373 22.627c12.496 12.497 32.758 12.497 45.254 0z"
+    ></path>
+  </${DefaultSVG}>
+`;
+
+const SpeedSVG = ({ color }) => html`
+  <${DefaultSVG}>
+    <path
+      style=${{ fill: color || colors.muted }}
+      d="M256 432v-160l-160 160v-352l160 160v-160l176 176z"
+    ></path>
+  </${DefaultSVG}>
+`;
+
+const DefenseSVG = ({ color }) => html`
+  <${DefaultSVG}>
+    <path
+      style=${{ fill: color || colors.muted }}
+      d="M256.002 52.45l143.999 78.545-0.001 109.005c0 30.499-3.754 57.092-11.477 81.299-7.434 23.303-18.396 43.816-33.511 62.711-22.371 27.964-53.256 51.74-99.011 76.004-45.753-24.263-76.644-48.042-99.013-76.004-15.116-18.896-26.078-39.408-33.512-62.711-7.722-24.207-11.476-50.8-11.476-81.299v-109.004l144.002-78.546zM256.003 0c-2.637 0-5.274 0.651-7.663 1.954l-176.002 96c-5.14 2.803-8.338 8.191-8.338 14.046v128c0 70.394 18.156 127.308 55.506 173.995 29.182 36.478 69.072 66.183 129.34 96.315 2.252 1.126 4.704 1.689 7.155 1.689s4.903-0.563 7.155-1.689c60.267-30.134 100.155-59.839 129.337-96.315 37.351-46.687 55.507-103.601 55.507-173.995l0.001-128c0-5.855-3.198-11.243-8.338-14.046l-175.999-96c-2.387-1.303-5.024-1.954-7.661-1.954v0z"
+    ></path>
+    <path
+      style=${{ fill: color || colors.muted }}
+      d="M160 159.491v80.509c0 25.472 3.011 47.293 9.206 66.711 5.618 17.608 13.882 33.085 25.265 47.313 14.589 18.237 34.038 34.408 61.531 50.927 27.492-16.518 46.939-32.688 61.53-50.927 11.382-14.228 19.646-29.704 25.263-47.313 6.194-19.418 9.205-41.239 9.205-66.711l0.001-80.51-95.999-52.363-96.002 52.364z"
+    ></path>
+  </${DefaultSVG}>
+`;
+// #endregion
+
 // #region Views
 function App() {
   const [activeTab, setActiveTab] = useState(TabsType.market);
@@ -237,17 +391,13 @@ function App() {
     alignItems: "center",
     bottom: 0,
     width: "100%",
-    background: Colors.background,
-    borderTop: `1px solid ${Colors.borderlight}`,
-  };
-  const styleBalance = {
-    color: Colors.dfmythic,
-    textAlign: "right",
+    background: colors.background,
+    borderTop: `1px solid ${colors.borderlight}`,
   };
 
   const styleTab = (isActive) => ({
-    color: isActive ? Colors.dfwhite : Colors.muted,
-    background: Colors.background,
+    color: isActive ? colors.dfwhite : colors.muted,
+    background: colors.background,
   });
 
   return html`
@@ -609,7 +759,7 @@ function styleButton(theme, isActive) {
   const styleBase = {
     padding: "2px 8px",
     border: 0,
-    color: isActive ? Colors.gray.dfblack : Colors.gray,
+    color: isActive ? colors.gray.dfblack : colors.gray,
     outline: "none",
   };
 
@@ -621,28 +771,28 @@ function themeButton(theme, isActive) {
     case "blue":
     case "info":
       return {
-        background: isActive ? Colors.dfblue : Colors.backgrounddark,
+        background: isActive ? colors.dfblue : colors.backgrounddark,
       };
     case "yellow":
     case "warning":
       return {
-        background: isActive ? Colors.dfyellow : Colors.backgrounddark,
+        background: isActive ? colors.dfyellow : colors.backgrounddark,
       };
     case "green":
     case "success":
       return {
-        background: isActive ? Colors.dfgreen : Colors.backgrounddark,
+        background: isActive ? colors.dfgreen : colors.backgrounddark,
       };
     case "red":
     case "danger":
       return {
-        background: isActive ? Colors.dfgreen : Colors.backgrounddark,
+        background: isActive ? colors.dfgreen : colors.backgrounddark,
       };
     case "gray":
     case "default":
     default:
       return {
-        background: isActive ? Colors.muted : Colors.backgrounddark,
+        background: isActive ? colors.muted : colors.backgrounddark,
       };
   }
 }
@@ -651,7 +801,7 @@ function themeButton(theme, isActive) {
 function rarityColor(key) {
   const rarity = key[0] + key.toLowerCase().slice(1, key.length); // COMMON => Common
   const rarityId = ArtifactRarity[rarity];
-  return RarityColors[rarityId];
+  return Raritycolors[rarityId];
 }
 // #endregion
 
@@ -665,9 +815,9 @@ function formatMultiplier(value) {
 }
 
 function formatMultiplierColor(value) {
-  if (value === 100) return Colors.muted;
-  if (value > 100) return Colors.dfgreen;
-  return Colors.dfred;
+  if (value === 100) return colors.muted;
+  if (value > 100) return colors.dfgreen;
+  return colors.dfred;
 }
 
 // convert uppercase artifactType to properly formatted name
