@@ -356,78 +356,6 @@ function ArtifactsMarket({ empty, artifacts = [], setActiveArtifact }) {
   `;
 }
 
-function ArtifactsListings({ empty, artifacts = [], setActiveArtifact }) {
-  const [sort, setSort] = useState(null);
-  const [filter, setFilter] = useState("");
-  const [reverse, setReverse] = useState(false);
-  const clear = () => {
-    setSort(null);
-    setReverse(false);
-  };
-
-  const bySort = (a, b) => {
-    if (!sort) return b.rarity - a.rarity;
-    if (sort === ArtifactSortType.type) {
-      const nameA = ArtifactTypeNames[a[sort]];
-      const nameB = ArtifactTypeNames[b[sort]];
-      if (nameA < nameB) return reverse ? 1 : -1;
-      if (nameA > nameB) return reverse ? -1 : 1;
-      return 0;
-    }
-    const valA = formatMultiplierArtifact(a, sort);
-    const valB = formatMultiplierArtifact(b, sort);
-    return reverse ? valA - valB : valB - valA;
-  };
-
-  const byFilter = ({ artifactType, rarity }) => {
-    const letters = filter.toLowerCase();
-    const hasLetters = (text) => text.toLowerCase().includes(letters);
-    if (hasLetters(ArtifactTypeNames[artifactType])) return true;
-    if (hasLetters(ArtifactRarityNames[rarity])) return true;
-  };
-
-  const artifactsStyle = {
-    display: "grid",
-    gridRowGap: "4px",
-  };
-
-  const emptyStyle = {
-    color: "#838383",
-  };
-
-  const artifactsChildren = artifacts.length
-    ? artifacts
-        .sort(bySort)
-        .filter(byFilter)
-        .map(
-          (artifact) =>
-            html`<${ArtifactMarket}
-              key=${artifact.id}
-              artifact=${artifact}
-              action=${setActiveArtifact(artifact)}
-            />`
-        )
-    : html`<p style=${emptyStyle}>${empty}</p>`;
-
-  return html`
-    <div>
-      ${!!artifacts.length &&
-      html`
-        <${ArtifactsHeaderMarket}
-          sort=${sort}
-          setSort=${setSort}
-          filter=${filter}
-          setFilter=${setFilter}
-          reverse=${reverse}
-          setReverse=${setReverse}
-          clear=${clear}
-        />
-      `}
-      <div style=${artifactsStyle}>${artifactsChildren}</div>
-    </div>
-  `;
-}
-
 function ArtifactsInventory({ empty, artifacts = [], setActiveArtifact }) {
   const [sort, setSort] = useState(null);
   const [filter, setFilter] = useState("");
@@ -776,6 +704,13 @@ function Market() {
     gridRowGap: "16px",
   };
 
+  const withdraw = (artifact) => {
+    data.marketContract?.contract
+      .unlist(BigNumber.from("0x" + artifact.id))
+      .then(() => {})
+      .catch((e) => console.log(e));
+  };
+
   if (loading) return html`<${Loading} />`;
 
   if (error)
@@ -800,20 +735,28 @@ function Market() {
         title="Artifacts For Sale"
         empty="There aren't currently any artifacts listed for sale."
         artifacts=${data.artifacts}
-        setActiveArtifact=${(artifact) => html`
-          <${Button}
-            children="buy"
-            style=${{ width: "100%" }}
-            onClick=${() => setActiveArtifact(artifact)}
-          />
-        `}
+        setActiveArtifact=${(artifact) =>
+          data.isArtifactOwned(artifact)
+            ? html`
+                <${Button}
+                  children="withdraw"
+                  style=${{ width: "100%" }}
+                  onClick=${() => withdraw(artifact)}
+                />
+              `
+            : html`
+                <${Button}
+                  children="buy"
+                  style=${{ width: "100%" }}
+                  onClick=${() => setActiveArtifact(artifact)}
+                />
+              `}
       />
     </div>
   `;
 }
 
 function MarketBuy({ artifact, setActiveArtifact }) {
-  const [price, setPrice] = useState(0);
   const { data } = useMarket();
   const styleInventoryBuy = { padding: 8 };
 
@@ -1066,6 +1009,8 @@ function useMarket() {
     data: {
       artifacts,
       artifactsListed,
+      isArtifactOwned: (a) =>
+        a.owner?.toLowerCase() === df.account.toLowerCase(),
       marketContract: marketContract?.data,
     },
     loading: marketContract.loading || loading,
