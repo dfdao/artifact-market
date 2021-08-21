@@ -73,6 +73,7 @@ const TabsTypeNames = {
 
 const ArtifactSortType = {
   type: "artifactType",
+  price: "price",
   energy: "energyCapMultiplier",
   energyGrowth: "energyGroMultiplier",
   range: "rangeMultiplier",
@@ -112,7 +113,74 @@ function Loading() {
   return html` <div style=${{ padding: 8 }}>${indicator}</div> `;
 }
 
-function ArtifactsHeader(props) {
+function ArtifactsHeaderMarket(props) {
+  const color = (type) => {
+    if (props.sort === type && props.reverse) return colors.dfred;
+    if (props.sort === type) return colors.dfgreen;
+    return colors.muted;
+  };
+
+  const sortBy = (type) => () => {
+    if (props.reverse) return props.clear();
+    if (props.sort === type) return props.setReverse(true);
+    return props.setSort(type);
+  };
+
+  const artifactsHeaderStyle = {
+    display: "grid",
+    marginBottom: "4px",
+    gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1fr 1.75fr",
+    gridColumnGap: "8px",
+    textAlign: "center",
+  };
+
+  return html`
+    <div style=${artifactsHeaderStyle}>
+      <${ArtifactHeaderButton}
+        style=${{
+          justifyContent: "flex-start",
+          color: color(ArtifactSortType.type),
+        }}
+        onClick=${sortBy(ArtifactSortType.type)}
+        children="Artifact"
+      />
+
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.energy)}>
+        <${EnergySVG} color=${color(ArtifactSortType.energy)} />
+      </${ArtifactHeaderButton} />
+
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.energyGrowth)}>
+        <${EnergyGrowthSVG} color=${color(ArtifactSortType.energyGrowth)} />
+      </${ArtifactHeaderButton} />
+
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.range)}>
+        <${RangeSVG} color=${color(ArtifactSortType.range)} />
+      </${ArtifactHeaderButton} />
+      
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.speed)}>
+        <${SpeedSVG} color=${color(ArtifactSortType.speed)} />
+      </${ArtifactHeaderButton} />
+
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.defense)}>
+        <${DefenseSVG} color=${color(ArtifactSortType.defense)} />
+      </${ArtifactHeaderButton} />
+
+      <${ArtifactHeaderButton} onClick=${sortBy(ArtifactSortType.price)}>
+        <${PriceSVG} color=${color(ArtifactSortType.price)} />
+      </${ArtifactHeaderButton} />
+
+      <${Input}
+        type="search"
+        placeholder="search..."
+        value=${props.filter} 
+        onChange=${props.setFilter} 
+        style=${{ width: "100%", fontSize: 12 }}
+      />
+    </div>
+  `;
+}
+
+function ArtifactsHeaderInventory(props) {
   const color = (type) => {
     if (props.sort === type && props.reverse) return colors.dfred;
     if (props.sort === type) return colors.dfgreen;
@@ -175,6 +243,28 @@ function ArtifactsHeader(props) {
   `;
 }
 
+function ArtifactsHeaderSell() {
+  const artifactsHeaderStyle = {
+    display: "grid",
+    marginBottom: "4px",
+    gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1.75fr",
+    gridColumnGap: "8px",
+    textAlign: "right",
+  };
+
+  return html`
+    <div style=${artifactsHeaderStyle}>
+      <div></div>
+      <${EnergySVG} />
+      <${EnergyGrowthSVG} />
+      <${RangeSVG} />
+      <${SpeedSVG} />
+      <${DefenseSVG} />
+      <div></div>
+    </div>
+  `;
+}
+
 function ArtifactHeaderButton({ children, style, onClick }) {
   const buttonStyle = {
     display: "flex",
@@ -192,7 +282,151 @@ function ArtifactHeaderButton({ children, style, onClick }) {
   `;
 }
 
-function Artifacts({ empty, artifacts = [], action }) {
+function ArtifactsMarket({ empty, artifacts = [], setActiveArtifact }) {
+  const [sort, setSort] = useState(null);
+  const [filter, setFilter] = useState("");
+  const [reverse, setReverse] = useState(false);
+  const clear = () => {
+    setSort(null);
+    setReverse(false);
+  };
+
+  const bySort = (a, b) => {
+    if (!sort) return b.rarity - a.rarity;
+    if (sort === ArtifactSortType.type) {
+      const nameA = ArtifactTypeNames[a[sort]];
+      const nameB = ArtifactTypeNames[b[sort]];
+      if (nameA < nameB) return reverse ? 1 : -1;
+      if (nameA > nameB) return reverse ? -1 : 1;
+      return 0;
+    }
+    const valA = formatMultiplierArtifact(a, sort);
+    const valB = formatMultiplierArtifact(b, sort);
+    return reverse ? valA - valB : valB - valA;
+  };
+
+  const byFilter = ({ artifactType, rarity }) => {
+    const letters = filter.toLowerCase();
+    const hasLetters = (text) => text.toLowerCase().includes(letters);
+    if (hasLetters(ArtifactTypeNames[artifactType])) return true;
+    if (hasLetters(ArtifactRarityNames[rarity])) return true;
+  };
+
+  const artifactsStyle = {
+    display: "grid",
+    gridRowGap: "4px",
+  };
+
+  const emptyStyle = {
+    color: "#838383",
+  };
+
+  const artifactsChildren = artifacts.length
+    ? artifacts
+        .sort(bySort)
+        .filter(byFilter)
+        .map(
+          (artifact) =>
+            html`<${ArtifactMarket}
+              key=${artifact.id}
+              artifact=${artifact}
+              action=${setActiveArtifact(artifact)}
+            />`
+        )
+    : html`<p style=${emptyStyle}>${empty}</p>`;
+
+  return html`
+    <div>
+      ${!!artifacts.length &&
+      html`
+        <${ArtifactsHeaderMarket}
+          sort=${sort}
+          setSort=${setSort}
+          filter=${filter}
+          setFilter=${setFilter}
+          reverse=${reverse}
+          setReverse=${setReverse}
+          clear=${clear}
+        />
+      `}
+      <div style=${artifactsStyle}>${artifactsChildren}</div>
+    </div>
+  `;
+}
+
+function ArtifactsListings({ empty, artifacts = [], setActiveArtifact }) {
+  const [sort, setSort] = useState(null);
+  const [filter, setFilter] = useState("");
+  const [reverse, setReverse] = useState(false);
+  const clear = () => {
+    setSort(null);
+    setReverse(false);
+  };
+
+  const bySort = (a, b) => {
+    if (!sort) return b.rarity - a.rarity;
+    if (sort === ArtifactSortType.type) {
+      const nameA = ArtifactTypeNames[a[sort]];
+      const nameB = ArtifactTypeNames[b[sort]];
+      if (nameA < nameB) return reverse ? 1 : -1;
+      if (nameA > nameB) return reverse ? -1 : 1;
+      return 0;
+    }
+    const valA = formatMultiplierArtifact(a, sort);
+    const valB = formatMultiplierArtifact(b, sort);
+    return reverse ? valA - valB : valB - valA;
+  };
+
+  const byFilter = ({ artifactType, rarity }) => {
+    const letters = filter.toLowerCase();
+    const hasLetters = (text) => text.toLowerCase().includes(letters);
+    if (hasLetters(ArtifactTypeNames[artifactType])) return true;
+    if (hasLetters(ArtifactRarityNames[rarity])) return true;
+  };
+
+  const artifactsStyle = {
+    display: "grid",
+    gridRowGap: "4px",
+  };
+
+  const emptyStyle = {
+    color: "#838383",
+  };
+
+  const artifactsChildren = artifacts.length
+    ? artifacts
+        .sort(bySort)
+        .filter(byFilter)
+        .map(
+          (artifact) =>
+            html`<${ArtifactMarket}
+              key=${artifact.id}
+              artifact=${artifact}
+              action=${setActiveArtifact(artifact)}
+            />`
+        )
+    : html`<p style=${emptyStyle}>${empty}</p>`;
+
+  return html`
+    <div>
+      ${!!artifacts.length &&
+      html`
+        <${ArtifactsHeaderMarket}
+          sort=${sort}
+          setSort=${setSort}
+          filter=${filter}
+          setFilter=${setFilter}
+          reverse=${reverse}
+          setReverse=${setReverse}
+          clear=${clear}
+        />
+      `}
+      <div style=${artifactsStyle}>${artifactsChildren}</div>
+    </div>
+  `;
+}
+
+function ArtifactsInventory({ empty, artifacts = [], setActiveArtifact }) {
   const [sort, setSort] = useState(null);
   const [filter, setFilter] = useState("");
   const [reverse, setReverse] = useState(false);
@@ -240,7 +474,7 @@ function Artifacts({ empty, artifacts = [], action }) {
             html`<${Artifact}
               key=${artifact.id}
               artifact=${artifact}
-              action=${action}
+              action=${setActiveArtifact(artifact)}
             />`
         )
     : html`<p style=${emptyStyle}>${empty}</p>`;
@@ -249,7 +483,7 @@ function Artifacts({ empty, artifacts = [], action }) {
     <div>
       ${!!artifacts.length &&
       html`
-        <${ArtifactsHeader}
+        <${ArtifactsHeaderInventory}
           sort=${sort}
           setSort=${setSort}
           filter=${filter}
@@ -291,13 +525,42 @@ function Artifact({ artifact, action }) {
           />
         `
       )}
-      <div>
-        <${Button}
-          theme=${action === "buy" ? "green" : "yellow"}
-          style=${{ width: "100%" }}
-          children=${action}
-        />
+      <div>${action}</div>
+    </div>
+  `;
+}
+
+function ArtifactMarket({ artifact, action }) {
+  const artifactStyle = {
+    display: "grid",
+    gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1fr 1.75fr",
+    gridColumnGap: "8px",
+    textAlign: "right",
+  };
+
+  const artifactTypeStyle = {
+    color: Raritycolors[artifact.rarity],
+    textAlign: "left",
+  };
+
+  return html`
+    <div style=${artifactStyle}>
+      <div style=${artifactTypeStyle}>
+        ${ArtifactTypeNames[artifact.artifactType]}
       </div>
+      ${Array.from({ length: 5 }, (_, i) => i).map(
+        (val) => html`
+          <${UpgradeStatInfo}
+            upgrades=${[artifact.upgrade, artifact.timeDelayedUpgrade]}
+            stat=${val}
+            key=${val}
+          />
+        `
+      )}
+      <div>
+        ${artifact.price ? BigNumber.from(artifact.price).toString() : ""}
+      </div>
+      <div>${action}</div>
     </div>
   `;
 }
@@ -424,6 +687,13 @@ const DefenseSVG = ({ color }) => html`
     ></path>
   </${DefaultSVG}>
 `;
+
+const PriceSVG = ({ color }) => html`
+  <${DefaultSVG}>
+    <path style=${{ fill: color || colors.muted }} 
+    d="M212 40H40V126H212V40ZM298 40H470V126H298V40ZM126 384H212V470H126H40V384V298H126V384ZM298 384H384V298H470V384V470H384H298V384Z"/>
+  </${DefaultSVG}>
+`;
 // #endregion
 
 // #region Views
@@ -498,6 +768,7 @@ function App() {
 
 function Market() {
   const { data, loading, error } = useMarket();
+  const [activeArtifact, setActiveArtifact] = useState(false);
   const artifactsStyle = {
     display: "grid",
     width: "100%",
@@ -516,6 +787,7 @@ function Market() {
 
   // TODO: add sale price
   // utils.formatEther(artifact.price)
+  // console.log(data, loading, error);
 
   if (loading) return html`<${Loading} />`;
 
@@ -529,12 +801,17 @@ function Market() {
 
   return html`
     <div style=${artifactsStyle}>
-      <${Artifacts}
+      <${ArtifactsMarket}
         title="Artifacts For Sale"
         empty="There aren't currently any artifacts listed for sale."
-        action="buy"
-        price="1.0"
-        artifacts=${data.artifactsForSale}
+        artifacts=${data.artifacts}
+        setActiveArtifact=${(artifact) => html`
+          <${Button}
+            children="buy"
+            style=${{ width: "100%" }}
+            onClick=${() => setActiveArtifact(artifact)}
+          />
+        `}
       />
     </div>
   `;
@@ -568,7 +845,7 @@ function Listings() {
 
   return html`
     <div style=${artifactsStyle}>
-      <${Artifacts}
+      <${ArtifactsListings}
         title="Your Listed Artifacts"
         empty="You don't currently have any artifacts listed."
         artifacts=${data.artifactsListed}
@@ -579,6 +856,7 @@ function Listings() {
 
 function Inventory() {
   const { artifacts } = useInventory();
+  const [activeArtifact, setActiveArtifact] = useState(false);
   const artifactsStyle = {
     display: "grid",
     width: "100%",
@@ -586,6 +864,35 @@ function Inventory() {
     gridRowGap: "16px",
   };
 
+  if (activeArtifact)
+    return html`
+      <${InventorySell}
+        activeArtifact=${activeArtifact}
+        setActiveArtifact=${setActiveArtifact}
+      />
+    `;
+
+  return html`
+    <div style=${artifactsStyle}>
+      <${ArtifactsInventory}
+        title="Your Artifacts"
+        empty="You don't currently have any artifacts in your inventory. Withdraw them from spacetime rips or buy some from the market."
+        artifacts=${artifacts}
+        setActiveArtifact=${(artifact) => html`
+          <${Button}
+            children="sell"
+            style=${{ width: "100%" }}
+            onClick=${() => setActiveArtifact(artifact)}
+          />
+        `}
+      />
+    </div>
+  `;
+}
+
+function InventorySell({ activeArtifact, setActiveArtifact }) {
+  // const { data, loading, error } = useApproval();
+  const styleInventorySell = { padding: 8 };
   // TODO: add list functionality
   // const onClick = (event) => {
   //   MARKET.list(
@@ -597,12 +904,13 @@ function Inventory() {
   // };
 
   return html`
-    <div style=${artifactsStyle}>
-      <${Artifacts}
-        title="Your Artifacts"
-        empty="You don't currently have any artifacts in your inventory. Withdraw them from spacetime rips or buy some from the market."
-        action="sell"
-        artifacts=${artifacts}
+    <div style=${styleInventorySell}>
+      <${ArtifactsHeaderSell} />
+      <${Artifact} artifact=${activeArtifact} />
+      <${Button}
+        style=${{ width: "100%" }}
+        onClick=${() => setActiveArtifact(false)}
+        children="cancel"
       />
     </div>
   `;
@@ -653,24 +961,89 @@ function useApprovalContract() {
 
 function useMarket() {
   const marketContract = useMarketContract();
-  const account = marketContract.data?.address?.toLowerCase();
+  const [artifacts, setArtifacts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState();
   // TODO: get artifact prices from market contract via ethers
   // marketContract.data?.abi
   // marketContract.data?.contract
 
+  useEffect(() => {
+    df.contractsAPI
+      .getPlayerArtifacts(MARKET_ADDRESS)
+      .then(setArtifacts)
+      .then(() => setLoading(false))
+      .catch(setError);
+  }, []);
+
+  useEffect(() => {
+    if (artifacts.length && marketContract.data) {
+      Promise.all(
+        artifacts.map(async (artifact) =>
+          marketContract.data.contract
+            .listings(BigNumber.from("0x" + artifact.id))
+            .then(([owner, price]) => ({ ...artifact, owner, price }))
+            .catch(setError)
+        )
+      ).then(setArtifacts);
+    }
+  }, [artifacts, marketContract.data]);
+
   return {
     data: {
-      artifacts: df.entityStore.getArtifactsOwnedBy(account),
-      marketContract: marketContract.data,
+      artifacts,
+      marketContract: marketContract?.data,
     },
-    loading: marketContract.loading,
-    error: marketContract.error,
+    loading: marketContract.loading || loading,
+    error: marketContract.error || error,
   };
 }
 
 function useInventory() {
   return {
     artifacts: df.entityStore.getArtifactsOwnedBy(df.account),
+  };
+}
+
+function useApproval() {
+  const approvalContract = useApprovalContract();
+  const [loading, setLoading] = useState();
+  const [error, setError] = useState();
+  const [isApproved, setIsApproved] = useState();
+  const setApproved = approvalContract.data?.contract.setApprovalForAll;
+
+  useEffect(() => {
+    const isApprovedForAll = approvalContract.data?.contract.isApprovedForAll;
+    if (
+      isApprovedForAll &&
+      !isApproved &&
+      !loading &&
+      !approvalContract.loading
+    ) {
+      setLoading(true);
+      isApprovedForAll(df.account, MARKET_ADDRESS)
+        .then((res) => {
+          setIsApproved(res);
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError(err);
+          setLoading(false);
+        });
+    }
+  }, [approvalContract.data?.contract, isApproved]);
+
+  return {
+    data: {
+      isApproved,
+      approve: () =>
+        setApproved(MARKET_ADDRESS, true)
+          .then(() => setIsApproved(true))
+          .catch(setError),
+      approvalContract: approvalContract.data,
+    },
+    loading: loading || approvalContract.loading,
+    error: error || approvalContract.error,
   };
 }
 
@@ -785,6 +1158,7 @@ function getMyBalance() {
 function subscribeToMyBalance(cb) {
   return df.getMyBalance$().subscribe(() => cb(getMyBalance()));
 }
+
 // #endregion
 
 // #region Plugin
@@ -795,8 +1169,8 @@ class Plugin {
 
   render(container) {
     this.container = container;
-    this.container.style.width = "512px";
-    this.container.style.height = "384px";
+    this.container.style.width = "600px";
+    this.container.style.height = "400px";
     this.container.style.padding = 0;
     render(html`<${App} />`, container);
   }
