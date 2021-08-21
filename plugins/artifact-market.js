@@ -825,12 +825,12 @@ function Listings() {
     gridRowGap: "16px",
   };
 
-  // TODO: Add unlist functionality
-  // function unlist (event) {
-  //   MARKET.unlist(BigNumber.from(artifact.idDec))
-  //     .then(() => { /* TODO: ensure market list updates */  })
-  //     .catch(console.log); // catch error (in case of tx failure or something else)
-  // }
+  const withdraw = (artifact) => {
+    data.marketContract?.contract
+      .unlist(BigNumber.from("0x" + artifact.id))
+      .then(() => {})
+      .catch((e) => console.log(e));
+  };
 
   if (loading) return html`<${Loading} />`;
 
@@ -844,10 +844,17 @@ function Listings() {
 
   return html`
     <div style=${artifactsStyle}>
-      <${ArtifactsListings}
-        title="Your Listed Artifacts"
-        empty="You don't currently have any artifacts listed."
+      <${ArtifactsMarket}
+        title="Artifacts For Sale"
+        empty="There aren't currently any artifacts listed for sale."
         artifacts=${data.artifactsListed}
+        setActiveArtifact=${(artifact) => html`
+          <${Button}
+            children="withdraw"
+            style=${{ width: "100%" }}
+            onClick=${() => withdraw(artifact)}
+          />
+        `}
       />
     </div>
   `;
@@ -995,6 +1002,9 @@ function useMarket() {
   const [artifacts, setArtifacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState();
+  const artifactsListed = artifacts.filter(
+    (artifact) => artifact.owner?.toLowerCase() === df.account.toLowerCase()
+  );
 
   useEffect(() => {
     df.contractsAPI
@@ -1026,6 +1036,7 @@ function useMarket() {
   return {
     data: {
       artifacts,
+      artifactsListed,
       marketContract: marketContract?.data,
     },
     loading: marketContract.loading || loading,
