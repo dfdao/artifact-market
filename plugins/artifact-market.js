@@ -14,7 +14,7 @@ import { BigNumber, utils } from "https://cdn.skypack.dev/ethers";
 // #region Constants
 // market contract on blockscout: https://blockscout.com/poa/xdai/address/0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8
 // when a new round starts APPROVAL_ADDRESS must be updated
-const APPROVAL_ADDRESS = "0xafb1A0C81c848Ad530766aD4BE2fdddC833e1e96";
+const APPROVAL_ADDRESS = "0x621ce133521c3B1cf11C0b9423406F01835af0ee";
 const MARKET_ADDRESS = "0x1e7cb1dbC6DaD80c86e8918382107238fb4562a8";
 const MARKET_ABI =
   "https://gist.githubusercontent.com/zk-FARTs/5761e33760932affcbc3b13dd28f6925/raw/afd3c6d8eba7c27148afc9092bfe411d061d58a3/MARKET_ABI.json";
@@ -255,7 +255,9 @@ function ArtifactsHeaderSell() {
   return html`
     <div style=${artifactsHeaderStyle}>
       <div></div>
-      <${EnergySVG} />
+      <div>
+        <${EnergySVG} />
+      </div>
       <${EnergyGrowthSVG} />
       <${RangeSVG} />
       <${SpeedSVG} />
@@ -852,7 +854,7 @@ function Listings() {
 }
 
 function Inventory() {
-  const { artifacts } = useInventory();
+  const { data, loading, error } = useInventory();
   const [activeArtifact, setActiveArtifact] = useState(false);
   const artifactsStyle = {
     display: "grid",
@@ -860,6 +862,16 @@ function Inventory() {
     padding: "8px",
     gridRowGap: "16px",
   };
+
+  if (loading) return html`<${Loading} />`;
+
+  if (error)
+    return html`
+      <div>
+        <h1>Something went wrong...</h1>
+        <p>${JSON.stringify(error, null, 2)}</p>
+      </div>
+    `;
 
   if (activeArtifact)
     return html`
@@ -874,7 +886,7 @@ function Inventory() {
       <${ArtifactsInventory}
         title="Your Artifacts"
         empty="You don't currently have any artifacts in your inventory. Withdraw them from spacetime rips or buy some from the market."
-        artifacts=${artifacts}
+        artifacts=${data.artifacts}
         setActiveArtifact=${(artifact) => html`
           <${Button}
             children="sell"
@@ -888,7 +900,7 @@ function Inventory() {
 }
 
 function InventorySell({ artifact, setActiveArtifact }) {
-  const approval = useApproval();
+  useApproval();
   const [price, setPrice] = useState(0);
   const { data } = useMarket();
   const styleInventorySell = { padding: 8 };
@@ -912,8 +924,6 @@ function InventorySell({ artifact, setActiveArtifact }) {
       })
       .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
   };
-
-  console.log(approval.data.isApproved, artifact);
 
   return html`
     <div style=${styleInventorySell}>
@@ -1024,8 +1034,24 @@ function useMarket() {
 }
 
 function useInventory() {
+  const [artifacts, setArtifacts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState();
+
+  useEffect(() => {
+    df.contractsAPI
+      .getPlayerArtifacts(df.account)
+      .then(setArtifacts)
+      .then(() => setLoading(false))
+      .catch(setError);
+  }, []);
+
   return {
-    artifacts: df.entityStore.getArtifactsOwnedBy(df.account),
+    data: {
+      artifacts,
+    },
+    loading,
+    error,
   };
 }
 
