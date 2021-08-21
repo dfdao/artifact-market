@@ -481,6 +481,46 @@ function Artifact({ artifact, action }) {
   `;
 }
 
+function ArtifactDetails({ artifact }) {
+  const stylesArtifactDetails = {
+    margin: "16px auto",
+  };
+
+  return html`
+    <div style=${stylesArtifactDetails}>
+      <${Detail}
+        title="rarity"
+        description=${ArtifactRarityNames[artifact.rarity]}
+      />
+
+      <${Detail}
+        title="biome"
+        description=${BiomeNames[artifact.planetBiome]}
+      />
+
+      <${Detail} title="seller" description=${artifact.owner} />
+      <${Detail} title="discoverer" description=${artifact.discoverer} />
+
+      <${Detail}
+        title="discovered"
+        description=${formatDateTime(artifact.mintedAtTimestamp) || "never"}
+      />
+
+      <${Detail}
+        title="last activated"
+        description=${formatDateTime(artifact.lastActivated) || "never"}
+      />
+
+      <${Detail}
+        title="last deactivated"
+        description=${formatDateTime(artifact.lastDeactivated) || "never"}
+      />
+
+      <${Detail} title="price" description=${`${artifact.price} xDai`} />
+    </div>
+  `;
+}
+
 function ArtifactMarket({ artifact, action }) {
   const artifactStyle = {
     display: "grid",
@@ -801,45 +841,12 @@ function MarketBuy({ artifact, setActiveArtifact }) {
       })
       .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
   };
-  console.log(artifact);
+
   return html`
     <div style=${styleInventoryBuy}>
       <${ArtifactsHeaderBuySell} />
       <${ArtifactMarket} artifact=${artifact} />
-
-      <br />
-
-      <${Detail}
-        title="rarity"
-        description=${ArtifactRarityNames[artifact.rarity]}
-      />
-
-      <${Detail}
-        title="biome"
-        description=${BiomeNames[artifact.planetBiome]}
-      />
-
-      <${Detail} title="seller" description=${artifact.owner} />
-      <${Detail} title="discoverer" description=${artifact.discoverer} />
-
-      <${Detail}
-        title="discovered"
-        description=${formatDateTime(artifact.mintedAtTimestamp) || "never"}
-      />
-
-      <${Detail}
-        title="last activated"
-        description=${formatDateTime(artifact.lastActivated) || "never"}
-      />
-
-      <${Detail}
-        title="last deactivated"
-        description=${formatDateTime(artifact.lastDeactivated) || "never"}
-      />
-
-      <${Detail} title="price" description=${`${artifact.price} xDai`} />
-
-      <br />
+      <${ArtifactDetails} artifact=${artifact} />
 
       <div
         style=${{
@@ -947,7 +954,7 @@ function Inventory() {
         artifacts=${data.artifacts}
         setActiveArtifact=${(artifact) => html`
           <${Button}
-            children="sell"
+            children="view"
             style=${{ width: "100%" }}
             onClick=${() => setActiveArtifact(artifact)}
           />
@@ -986,19 +993,38 @@ function InventorySell({ artifact, setActiveArtifact }) {
   return html`
     <div style=${styleInventorySell}>
       <${ArtifactsHeaderBuySell} />
-      <${Artifact} artifact=${artifact} />
-      <div>
+      <${ArtifactMarket} artifact=${{ ...artifact, price }} />
+      <${ArtifactDetails} artifact=${{ ...artifact, price }} />
+
+      <div
+        style=${{
+          display: "grid",
+          gridColumnGap: "8px",
+          gridAutoFlow: "column",
+          placeContent: "center",
+        }}
+      >
         <${Input}
           type="number"
           min="0"
           step="1"
           value=${price}
           onChange=${setPrice}
+          style=${{ width: "128px" }}
         />
-        <${Button} onClick=${onClickList} children="list" />
+
         <${Button}
-          onClick=${() => setActiveArtifact(false)}
+          theme="green"
+          style=${{ width: "128px" }}
+          children="list"
+          onClick=${onClickList}
+        />
+
+        <${Button}
+          theme="red"
+          style=${{ width: "128px" }}
           children="cancel"
+          onClick=${() => setActiveArtifact(false)}
         />
       </div>
     </div>
