@@ -776,18 +776,6 @@ function Market() {
     gridRowGap: "16px",
   };
 
-  // TODO: add buy functionality
-  // const onClick = (event) => {
-  //   MARKET.buy(BigNumber.from(artifact.idDec), {
-  //     value: BigNumber.from(artifact.price),
-  //   })
-  //     .then(() => { /* TODO: ensure item moves from Market to Inventory */})
-  //     .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
-  // };
-
-  // TODO: add sale price
-  // console.log(data, loading, error);
-
   if (loading) return html`<${Loading} />`;
 
   if (error)
@@ -796,6 +784,14 @@ function Market() {
         <h1>Something went wrong...</h1>
         <p>${JSON.stringify(error, null, 2)}</p>
       </div>
+    `;
+
+  if (activeArtifact)
+    return html`
+      <${MarketBuy}
+        artifact=${activeArtifact}
+        setActiveArtifact=${setActiveArtifact}
+      />
     `;
 
   return html`
@@ -812,6 +808,39 @@ function Market() {
           />
         `}
       />
+    </div>
+  `;
+}
+
+function MarketBuy({ artifact, setActiveArtifact }) {
+  const [price, setPrice] = useState(0);
+  const { data } = useMarket();
+  const styleInventoryBuy = { padding: 8 };
+
+  const buyArtifact = () => {
+    data.marketContract?.contract
+      .buy(BigNumber.from("0x" + artifact.id), {
+        value: artifact.priceRaw,
+        gasLimit: 250000,
+      })
+      .then((res) => {
+        console.log(JSON.stringify(res, null, 2));
+        setActiveArtifact(false);
+      })
+      .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
+  };
+
+  return html`
+    <div style=${styleInventoryBuy}>
+      <${ArtifactsHeaderSell} />
+      <${Artifact} artifact=${artifact} />
+      <div>
+        <${Button} onClick=${buyArtifact} children="buy" />
+        <${Button}
+          onClick=${() => setActiveArtifact(false)}
+          children="cancel"
+        />
+      </div>
     </div>
   `;
 }
@@ -846,7 +875,7 @@ function Listings() {
     <div style=${artifactsStyle}>
       <${ArtifactsMarket}
         title="Artifacts For Sale"
-        empty="There aren't currently any artifacts listed for sale."
+        empty="You don't have any artifacts listed for sale."
         artifacts=${data.artifactsListed}
         setActiveArtifact=${(artifact) => html`
           <${Button}
