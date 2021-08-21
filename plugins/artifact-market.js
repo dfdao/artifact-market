@@ -557,9 +557,7 @@ function ArtifactMarket({ artifact, action }) {
           />
         `
       )}
-      <div>
-        ${artifact.price ? BigNumber.from(artifact.price).toString() : ""}
-      </div>
+      <div>${artifact.price ? Number(artifact.price).toFixed(2) : ""}</div>
       <div>${action}</div>
     </div>
   `;
@@ -786,7 +784,6 @@ function Market() {
   // };
 
   // TODO: add sale price
-  // utils.formatEther(artifact.price)
   // console.log(data, loading, error);
 
   if (loading) return html`<${Loading} />`;
@@ -867,7 +864,7 @@ function Inventory() {
   if (activeArtifact)
     return html`
       <${InventorySell}
-        activeArtifact=${activeArtifact}
+        artifact=${activeArtifact}
         setActiveArtifact=${setActiveArtifact}
       />
     `;
@@ -890,28 +887,52 @@ function Inventory() {
   `;
 }
 
-function InventorySell({ activeArtifact, setActiveArtifact }) {
-  // const { data, loading, error } = useApproval();
+function InventorySell({ artifact, setActiveArtifact }) {
+  const approval = useApproval();
+  const [price, setPrice] = useState(0);
+  const { data } = useMarket();
   const styleInventorySell = { padding: 8 };
-  // TODO: add list functionality
-  // const onClick = (event) => {
-  //   MARKET.list(
-  //     BigNumber.from(artifact.idDec),
-  //     utils.parseEther(value.toString())
-  //   )
-  //     .then(() => { /* TODO: ensure item moves from inventory to Listings */})
-  //     .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
-  // };
+
+  const onClickList = () => {
+    console.log(
+      BigNumber.from("0x" + artifact.id),
+      utils.parseEther(price.toString())
+    );
+    data.marketContract?.contract
+      .list(
+        BigNumber.from("0x" + artifact.id),
+        utils.parseEther(price.toString()),
+        {
+          gasLimit: 250000,
+        }
+      )
+      .then((res) => {
+        console.log(JSON.stringify(res, null, 2));
+        setActiveArtifact(false);
+      })
+      .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
+  };
+
+  console.log(approval.data.isApproved, artifact);
 
   return html`
     <div style=${styleInventorySell}>
       <${ArtifactsHeaderSell} />
-      <${Artifact} artifact=${activeArtifact} />
-      <${Button}
-        style=${{ width: "100%" }}
-        onClick=${() => setActiveArtifact(false)}
-        children="cancel"
-      />
+      <${Artifact} artifact=${artifact} />
+      <div>
+        <${Input}
+          type="number"
+          min="0"
+          step="1"
+          value=${price}
+          onChange=${setPrice}
+        />
+        <${Button} onClick=${onClickList} children="list" />
+        <${Button}
+          onClick=${() => setActiveArtifact(false)}
+          children="cancel"
+        />
+      </div>
     </div>
   `;
 }
@@ -964,9 +985,6 @@ function useMarket() {
   const [artifacts, setArtifacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState();
-  // TODO: get artifact prices from market contract via ethers
-  // marketContract.data?.abi
-  // marketContract.data?.contract
 
   useEffect(() => {
     df.contractsAPI
@@ -977,12 +995,18 @@ function useMarket() {
   }, []);
 
   useEffect(() => {
-    if (artifacts.length && marketContract.data) {
+    const missingPrice = artifacts.filter((a) => !a.price);
+    if (missingPrice.length && marketContract.data) {
       Promise.all(
         artifacts.map(async (artifact) =>
           marketContract.data.contract
             .listings(BigNumber.from("0x" + artifact.id))
-            .then(([owner, price]) => ({ ...artifact, owner, price }))
+            .then(([owner, priceRaw]) => ({
+              ...artifact,
+              owner,
+              priceRaw,
+              price: utils.formatEther(priceRaw),
+            }))
             .catch(setError)
         )
       ).then(setArtifacts);
@@ -1007,13 +1031,16 @@ function useInventory() {
 
 function useApproval() {
   const approvalContract = useApprovalContract();
+  const [isApproved, setIsApproved] = useState();
   const [loading, setLoading] = useState();
   const [error, setError] = useState();
-  const [isApproved, setIsApproved] = useState();
-  const setApproved = approvalContract.data?.contract.setApprovalForAll;
+
+  if (error) console.log(error);
 
   useEffect(() => {
     const isApprovedForAll = approvalContract.data?.contract.isApprovedForAll;
+    const setApproved = approvalContract.data?.contract.setApprovalForAll;
+
     if (
       isApprovedForAll &&
       !isApproved &&
@@ -1022,8 +1049,12 @@ function useApproval() {
     ) {
       setLoading(true);
       isApprovedForAll(df.account, MARKET_ADDRESS)
-        .then((res) => {
-          setIsApproved(res);
+        .then((approved) => {
+          if (!approved) return setApproved(MARKET_ADDRESS, true);
+          return;
+        })
+        .then(() => {
+          setIsApproved(true);
           setLoading(false);
         })
         .catch((err) => {
@@ -1031,15 +1062,11 @@ function useApproval() {
           setLoading(false);
         });
     }
-  }, [approvalContract.data?.contract, isApproved]);
+  }, [approvalContract.data?.contract]);
 
   return {
     data: {
       isApproved,
-      approve: () =>
-        setApproved(MARKET_ADDRESS, true)
-          .then(() => setIsApproved(true))
-          .catch(setError),
       approvalContract: approvalContract.data,
     },
     loading: loading || approvalContract.loading,
