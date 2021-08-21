@@ -498,7 +498,7 @@ function ArtifactDetails({ artifact }) {
         description=${BiomeNames[artifact.planetBiome]}
       />
 
-      <${Detail} title="seller" description=${artifact.owner} />
+      <${Detail} title="seller" description=${artifact.owner || df.account} />
       <${Detail} title="discoverer" description=${artifact.discoverer} />
 
       <${Detail}
@@ -1083,32 +1083,34 @@ function useMarket() {
     (artifact) => artifact.owner?.toLowerCase() === df.account.toLowerCase()
   );
 
-  useEffect(() => {
+  const fetchMarket = () =>
     df.contractsAPI
       .getPlayerArtifacts(MARKET_ADDRESS)
+      .then((afx) =>
+        Promise.all(
+          afx.map(async (artifact) =>
+            marketContract.data.contract
+              .listings(BigNumber.from("0x" + artifact.id))
+              .then(([owner, priceRaw]) => ({
+                ...artifact,
+                owner,
+                priceRaw,
+                price: utils.formatEther(priceRaw),
+              }))
+              .catch(setError)
+          )
+        )
+      )
       .then(setArtifacts)
       .then(() => setLoading(false))
       .catch(setError);
-  }, []);
+
+  useEffect(fetchMarket, []);
 
   useEffect(() => {
-    const missingPrice = artifacts.filter((a) => !a.price);
-    if (missingPrice.length && marketContract.data) {
-      Promise.all(
-        artifacts.map(async (artifact) =>
-          marketContract.data.contract
-            .listings(BigNumber.from("0x" + artifact.id))
-            .then(([owner, priceRaw]) => ({
-              ...artifact,
-              owner,
-              priceRaw,
-              price: utils.formatEther(priceRaw),
-            }))
-            .catch(setError)
-        )
-      ).then(setArtifacts);
-    }
-  }, [artifacts, marketContract.data]);
+    const poll = setInterval(fetchMarket, 1000);
+    return () => clearInterval(poll);
+  }, []);
 
   return {
     data: {
@@ -1120,6 +1122,7 @@ function useMarket() {
     },
     loading: marketContract.loading || loading,
     error: marketContract.error || error,
+    refetch: fetchMarket,
   };
 }
 
