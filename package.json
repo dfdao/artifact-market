@@ -5,6 +5,7 @@
   "main": "plugins/artifact-market.js",
   "scripts": {
     "dev": "df-plugin-dev-server",
+    "build": "",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -12,10 +13,10 @@
     "url": "git+https://github.com/zk-FARTs/DF-Artifact-Market.git"
   },
   "keywords": [
-    "dark",
-    "forest",
-    "smart",
-    "contract",
+    "dark forest",
+    "smart contract",
+    "ethereum",
+    "xdai",
     "nft"
   ],
   "license": "ISC",
