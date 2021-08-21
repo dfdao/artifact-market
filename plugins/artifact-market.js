@@ -8,6 +8,7 @@ import {
   ArtifactRarity,
   ArtifactRarityNames,
   ArtifactTypeNames,
+  BiomeNames,
 } from "http://cdn.skypack.dev/@darkforest_eth/types";
 import { BigNumber, utils } from "https://cdn.skypack.dev/ethers";
 
@@ -243,25 +244,45 @@ function ArtifactsHeaderInventory(props) {
   `;
 }
 
-function ArtifactsHeaderSell() {
+function ArtifactsHeaderBuySell() {
   const artifactsHeaderStyle = {
     display: "grid",
     marginBottom: "4px",
-    gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1.75fr",
+    gridTemplateColumns: "2.75fr 1fr 1fr 1fr 1fr 1fr 1fr 1.75fr",
     gridColumnGap: "8px",
     textAlign: "right",
+    alignItems: "center",
   };
 
   return html`
     <div style=${artifactsHeaderStyle}>
-      <div></div>
-      <div>
+      <div
+        style=${{
+          display: "flex",
+          justifyContent: "flex-start",
+          color: colors.muted,
+        }}
+      >
+        Artifact
+      </div>
+      <div style=${{ display: "flex", justifyContent: "flex-end" }}>
         <${EnergySVG} />
       </div>
-      <${EnergyGrowthSVG} />
-      <${RangeSVG} />
-      <${SpeedSVG} />
-      <${DefenseSVG} />
+      <div style=${{ display: "flex", justifyContent: "flex-end" }}>
+        <${EnergyGrowthSVG} />
+      </div>
+      <div style=${{ display: "flex", justifyContent: "flex-end" }}>
+        <${RangeSVG} />
+      </div>
+      <div style=${{ display: "flex", justifyContent: "flex-end" }}>
+        <${SpeedSVG} />
+      </div>
+      <div style=${{ display: "flex", justifyContent: "flex-end" }}>
+        <${DefenseSVG} />
+      </div>
+      <div style=${{ display: "flex", justifyContent: "flex-end" }}>
+        <${PriceSVG} />
+      </div>
       <div></div>
     </div>
   `;
@@ -548,6 +569,14 @@ function Input({
     />
   `;
 }
+
+function Detail({ title, description }) {
+  return html`
+    <p>
+      ${title}: <span style=${{ color: colors.dfwhite }}>${description}</span>
+    </p>
+  `;
+}
 // #endregion
 
 // #region Icons
@@ -746,7 +775,7 @@ function Market() {
               `
             : html`
                 <${Button}
-                  children="buy"
+                  children="view"
                   style=${{ width: "100%" }}
                   onClick=${() => setActiveArtifact(artifact)}
                 />
@@ -772,15 +801,65 @@ function MarketBuy({ artifact, setActiveArtifact }) {
       })
       .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
   };
-
+  console.log(artifact);
   return html`
     <div style=${styleInventoryBuy}>
-      <${ArtifactsHeaderSell} />
-      <${Artifact} artifact=${artifact} />
-      <div>
-        <${Button} onClick=${buyArtifact} children="buy" />
+      <${ArtifactsHeaderBuySell} />
+      <${ArtifactMarket} artifact=${artifact} />
+
+      <br />
+
+      <${Detail}
+        title="rarity"
+        description=${ArtifactRarityNames[artifact.rarity]}
+      />
+
+      <${Detail}
+        title="biome"
+        description=${BiomeNames[artifact.planetBiome]}
+      />
+
+      <${Detail} title="seller" description=${artifact.owner} />
+      <${Detail} title="discoverer" description=${artifact.discoverer} />
+
+      <${Detail}
+        title="discovered"
+        description=${formatDateTime(artifact.mintedAtTimestamp) || "never"}
+      />
+
+      <${Detail}
+        title="last activated"
+        description=${formatDateTime(artifact.lastActivated) || "never"}
+      />
+
+      <${Detail}
+        title="last deactivated"
+        description=${formatDateTime(artifact.lastDeactivated) || "never"}
+      />
+
+      <${Detail} title="price" description=${`${artifact.price} xDai`} />
+
+      <br />
+
+      <div
+        style=${{
+          display: "grid",
+          gridColumnGap: "8px",
+          gridAutoFlow: "column",
+          placeContent: "center",
+        }}
+      >
         <${Button}
+          theme="green"
+          onClick=${buyArtifact}
+          style=${{ width: "192px" }}
+          children="buy"
+        />
+
+        <${Button}
+          theme="red"
           onClick=${() => setActiveArtifact(false)}
+          style=${{ width: "192px" }}
           children="cancel"
         />
       </div>
@@ -906,7 +985,7 @@ function InventorySell({ artifact, setActiveArtifact }) {
 
   return html`
     <div style=${styleInventorySell}>
-      <${ArtifactsHeaderSell} />
+      <${ArtifactsHeaderBuySell} />
       <${Artifact} artifact=${artifact} />
       <div>
         <${Input}
@@ -1129,7 +1208,7 @@ function themeButton(theme, isActive) {
     case "red":
     case "danger":
       return {
-        background: isActive ? colors.dfgreen : colors.backgrounddark,
+        background: isActive ? colors.dfred : colors.backgrounddark,
       };
     case "gray":
     case "default":
@@ -1183,6 +1262,12 @@ function formatMultiplierColor(value) {
   if (value === 100) return colors.muted;
   if (value > 100) return colors.dfgreen;
   return colors.dfred;
+}
+
+function formatDateTime(timestamp) {
+  if (!timestamp) return 0;
+  const date = new Date(timestamp * 1000);
+  return `${date.toDateString()} ${date.toLocaleTimeString()}`;
 }
 // #endregion
 
