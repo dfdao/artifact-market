@@ -1105,12 +1105,14 @@ function useMarket() {
       .then(() => setLoading(false))
       .catch(setError);
 
-  useEffect(fetchMarket, []);
-
   useEffect(() => {
-    const poll = setInterval(fetchMarket, 1000);
-    return () => clearInterval(poll);
-  }, []);
+    // start polling once we have marketContract.data
+    if (marketContract.data) {
+      fetchMarket();
+      const poll = setInterval(fetchMarket, 1000);
+      return () => clearInterval(poll);
+    }
+  }, [marketContract.data]);
 
   return {
     data: {
