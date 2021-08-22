@@ -9,7 +9,7 @@ import {
   ArtifactRarityNames,
   ArtifactTypeNames,
   BiomeNames,
-} from "http://cdn.skypack.dev/@darkforest_eth/types";
+} from "https://cdn.skypack.dev/@darkforest_eth/types";
 import { BigNumber, utils } from "https://cdn.skypack.dev/ethers";
 
 // #region Constants
