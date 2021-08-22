@@ -7,7 +7,7 @@ import { ArtifactDetails } from "../components/ArtifactDetails";
 import { ErrorLabel } from "../components/ErrorLabel";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
-import { BigNumber, utils } from "ethers";
+import { BigNumber } from "@ethersproject/bignumber";
 
 export function InventorySellView({ artifact, setActiveArtifact, market }) {
   useApproval();

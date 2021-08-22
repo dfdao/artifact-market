@@ -5,7 +5,7 @@ import { ArtifactsHeaderBuySell } from "../components/ArtifactsHeaderBuySell";
 import { ArtifactMarket } from "../components/ArtifactMarket";
 import { ArtifactDetails } from "../components/ArtifactDetails";
 import { ErrorLabel } from "../components/ErrorLabel";
-import { BigNumber, utils } from "ethers";
+import { BigNumber } from "@ethersproject/bignumber";
 
 export function MarketBuyView({ artifact, setActiveArtifact, market }) {
   const [error, setError] = useState();

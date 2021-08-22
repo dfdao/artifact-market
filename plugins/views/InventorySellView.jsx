@@ -7,7 +7,8 @@ import { ArtifactDetails } from "../components/ArtifactDetails";
 import { ErrorLabel } from "../components/ErrorLabel";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
-import { BigNumber, utils } from "ethers";
+import { BigNumber } from "@ethersproject/bignumber";
+import { parseEther } from "@ethersproject/units";
 
 export function InventorySellView({ artifact, setActiveArtifact, market }) {
   useApproval();
@@ -17,13 +18,9 @@ export function InventorySellView({ artifact, setActiveArtifact, market }) {
 
   const onClickList = () => {
     market.data.marketContract?.contract
-      .list(
-        BigNumber.from("0x" + artifact.id),
-        utils.parseEther(price.toString()),
-        {
-          gasLimit: 250000,
-        }
-      )
+      .list(BigNumber.from("0x" + artifact.id), parseEther(price.toString()), {
+        gasLimit: 250000,
+      })
       .then(() => {
         market.data.addArtifactToPending(artifact);
         setActiveArtifact(false);

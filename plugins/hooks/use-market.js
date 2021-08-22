@@ -1,7 +1,8 @@
 import { useState, useEffect } from "preact/hooks";
 import { useMarketContract } from "./use-market-contract";
 import { MARKET_ADDRESS, POLL_INTERVAL } from "../helpers/constants";
-import { BigNumber, utils } from "ethers";
+import { BigNumber } from "@ethersproject/bignumber";
+import { formatEther } from "@ethersproject/units";
 
 export function useMarket() {
   const marketContract = useMarketContract();
@@ -44,7 +45,7 @@ export function useMarket() {
                 ...artifact,
                 owner,
                 priceRaw,
-                price: utils.formatEther(priceRaw),
+                price: formatEther(priceRaw),
               }))
               .catch(setError)
           )
