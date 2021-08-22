@@ -24,6 +24,7 @@ const APPROVAL_ABI =
 const CACHE_KEY = "ARTIFACT-MARKET";
 const APPROVAL_KEY = "APPROVAL-CONTRACT";
 const MARKET_KEY = "MARKET-CONTRACT";
+const PENDING_KEY = "PENDING-TRANSACTIONS";
 
 // Dark Forest Helpers - ideally these would be imported from cdn
 
@@ -100,18 +101,29 @@ const StatNames = {
 // #endregion
 
 // #region Components
-function Loading() {
-  const [indicator, setIndicator] = useState("");
+function Loading({ length = 5, padding = 8 }) {
+  const [indicator, setIndicator] = useState(". ");
   useEffect(() => {
     let timeout = setTimeout(() => {
-      if (indicator.length === 10) setIndicator("");
+      if (indicator.length === length * 2) setIndicator(". ");
       else setIndicator(indicator + ". ");
     }, 150); // wait before showing loader
 
     return () => clearTimeout(timeout);
   }, [indicator]);
 
-  return html` <div style=${{ padding: 8 }}>${indicator}</div> `;
+  return html` <div style=${{ padding }}>${indicator}</div> `;
+}
+
+function ErrorLabel({ error }) {
+  const styleError = {
+    margin: "16px 0",
+    color: colors.dfred,
+  };
+
+  return error
+    ? html` <p style=${styleError}>Error: ${error.message}</p>`
+    : null;
 }
 
 function ArtifactsHeaderMarket(props) {
@@ -563,15 +575,16 @@ function UpgradeStatInfo({ upgrades, stat }) {
   `;
 }
 
-function Button({ children, style, theme = "default", onClick }) {
+function Button({ children, style, theme = "default", onClick, disabled }) {
   const [isActive, setIsActive] = useState(false);
 
   return html`
     <button
-      style=${{ ...styleButton(theme, isActive), ...style }}
+      style=${{ ...styleButton(theme, isActive, disabled), ...style }}
       onMouseEnter=${() => setIsActive(true)}
       onMouseLeave=${() => setIsActive(false)}
       onClick=${onClick}
+      disabled=${disabled}
     >
       ${children}
     </button>
@@ -773,13 +786,6 @@ function Market() {
     gridRowGap: "16px",
   };
 
-  const withdraw = (artifact) => {
-    data.marketContract?.contract
-      .unlist(BigNumber.from("0x" + artifact.id))
-      .then(() => {})
-      .catch((e) => console.log(e));
-  };
-
   if (loading) return html`<${Loading} />`;
 
   if (error)
@@ -795,6 +801,7 @@ function Market() {
       <${MarketBuy}
         artifact=${activeArtifact}
         setActiveArtifact=${setActiveArtifact}
+        market=${{ data, loading, error }}
       />
     `;
 
@@ -808,16 +815,22 @@ function Market() {
           data.isArtifactOwned(artifact)
             ? html`
                 <${Button}
-                  children="withdraw"
+                  children=${data.isArtifactPending(artifact)
+                    ? html`<${Loading} length=${3} padding=${0} />`
+                    : "withdraw"}
                   style=${{ width: "100%" }}
-                  onClick=${() => withdraw(artifact)}
+                  onClick=${() => data.withdrawArtifact(artifact)}
+                  disabled=${data.isArtifactPending(artifact)}
                 />
               `
             : html`
                 <${Button}
-                  children="view"
+                  children=${data.isArtifactPending(artifact)
+                    ? html`<${Loading} length=${3} padding=${0} />`
+                    : "view"}
                   style=${{ width: "100%" }}
                   onClick=${() => setActiveArtifact(artifact)}
+                  disabled=${data.isArtifactPending(artifact)}
                 />
               `}
       />
@@ -825,21 +838,24 @@ function Market() {
   `;
 }
 
-function MarketBuy({ artifact, setActiveArtifact }) {
-  const { data } = useMarket();
+function MarketBuy({ artifact, setActiveArtifact, market }) {
+  const [error, setError] = useState();
   const styleInventoryBuy = { padding: 8 };
 
   const buyArtifact = () => {
-    data.marketContract?.contract
+    market.data.marketContract?.contract
       .buy(BigNumber.from("0x" + artifact.id), {
         value: artifact.priceRaw,
         gasLimit: 250000,
       })
-      .then((res) => {
-        console.log(JSON.stringify(res, null, 2));
+      .then(() => {
+        market.data.addArtifactToPending(artifact);
         setActiveArtifact(false);
       })
-      .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
+      .catch((err) => {
+        console.log(err);
+        setError(err);
+      }); // catch error (in case of tx failure or something else)
   };
 
   return html`
@@ -847,6 +863,7 @@ function MarketBuy({ artifact, setActiveArtifact }) {
       <${ArtifactsHeaderBuySell} />
       <${ArtifactMarket} artifact=${artifact} />
       <${ArtifactDetails} artifact=${artifact} />
+      <${ErrorLabel} error=${error} />
 
       <div
         style=${{
@@ -883,13 +900,6 @@ function Listings() {
     gridRowGap: "16px",
   };
 
-  const withdraw = (artifact) => {
-    data.marketContract?.contract
-      .unlist(BigNumber.from("0x" + artifact.id))
-      .then(() => {})
-      .catch((e) => console.log(e));
-  };
-
   if (loading) return html`<${Loading} />`;
 
   if (error)
@@ -908,9 +918,12 @@ function Listings() {
         artifacts=${data.artifactsListed}
         setActiveArtifact=${(artifact) => html`
           <${Button}
-            children="withdraw"
+            children=${data.isArtifactPending(artifact)
+              ? html`<${Loading} length=${3} padding=${0} />`
+              : "withdraw"}
             style=${{ width: "100%" }}
-            onClick=${() => withdraw(artifact)}
+            onClick=${() => data.withdrawArtifact(artifact)}
+            disabled=${data.isArtifactPending(artifact)}
           />
         `}
       />
@@ -919,6 +932,7 @@ function Listings() {
 }
 
 function Inventory() {
+  const market = useMarket();
   const { data, loading, error } = useInventory();
   const [activeArtifact, setActiveArtifact] = useState(false);
   const artifactsStyle = {
@@ -943,6 +957,7 @@ function Inventory() {
       <${InventorySell}
         artifact=${activeArtifact}
         setActiveArtifact=${setActiveArtifact}
+        market=${market}
       />
     `;
 
@@ -952,30 +967,31 @@ function Inventory() {
         title="Your Artifacts"
         empty="You don't currently have any artifacts in your inventory. Withdraw them from spacetime rips or buy some from the market."
         artifacts=${data.artifacts}
-        setActiveArtifact=${(artifact) => html`
-          <${Button}
-            children="view"
-            style=${{ width: "100%" }}
-            onClick=${() => setActiveArtifact(artifact)}
-          />
-        `}
+        setActiveArtifact=${(artifact) => {
+          return html`
+            <${Button}
+              children=${market.data.isArtifactPending(artifact)
+                ? html`<${Loading} length=${3} padding=${0} />`
+                : "view"}
+              style=${{ width: "100%" }}
+              onClick=${() => setActiveArtifact(artifact)}
+              disabled=${market.data.isArtifactPending(artifact)}
+            />
+          `;
+        }}
       />
     </div>
   `;
 }
 
-function InventorySell({ artifact, setActiveArtifact }) {
+function InventorySell({ artifact, setActiveArtifact, market }) {
   useApproval();
   const [price, setPrice] = useState(0);
-  const { data } = useMarket();
+  const [error, setError] = useState();
   const styleInventorySell = { padding: 8 };
 
   const onClickList = () => {
-    console.log(
-      BigNumber.from("0x" + artifact.id),
-      utils.parseEther(price.toString())
-    );
-    data.marketContract?.contract
+    market.data.marketContract?.contract
       .list(
         BigNumber.from("0x" + artifact.id),
         utils.parseEther(price.toString()),
@@ -983,11 +999,14 @@ function InventorySell({ artifact, setActiveArtifact }) {
           gasLimit: 250000,
         }
       )
-      .then((res) => {
-        console.log(JSON.stringify(res, null, 2));
+      .then(() => {
+        market.data.addArtifactToPending(artifact);
         setActiveArtifact(false);
       })
-      .catch((e) => console.log(e)); // catch error (in case of tx failure or something else)
+      .catch((err) => {
+        console.log(err);
+        setError(err);
+      }); // catch error (in case of tx failure or something else)
   };
 
   return html`
@@ -995,6 +1014,7 @@ function InventorySell({ artifact, setActiveArtifact }) {
       <${ArtifactsHeaderBuySell} />
       <${ArtifactMarket} artifact=${{ ...artifact, price }} />
       <${ArtifactDetails} artifact=${{ ...artifact, price }} />
+      <${ErrorLabel} error=${error} />
 
       <div
         style=${{
@@ -1077,11 +1097,31 @@ function useApprovalContract() {
 function useMarket() {
   const marketContract = useMarketContract();
   const [artifacts, setArtifacts] = useState([]);
+  const [artifactsPending, setArtifactsPending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState();
   const artifactsListed = artifacts.filter(
-    (artifact) => artifact.owner?.toLowerCase() === df.account.toLowerCase()
+    (artifact) => artifact?.owner?.toLowerCase() === df.account.toLowerCase()
   );
+
+  // store pending artifacts to keep the UI in sync with the chain
+  // each update, check if artifact wallet changed, if so remove pending state
+  function addArtifactToPending(artifact) {
+    setArtifactsPending([...artifactsPending, artifact]);
+  }
+
+  function removeArtifactFromPending(artifact) {
+    setArtifactsPending(artifactsPending.filter((a) => a.id !== artifact.id));
+  }
+
+  const withdrawArtifact = (artifact) => {
+    marketContract.data?.contract
+      .unlist(BigNumber.from("0x" + artifact.id))
+      .then(() => addArtifactToPending(artifact))
+      .catch((e) => {
+        console.log(e);
+      });
+  };
 
   const fetchMarket = () =>
     df.contractsAPI
@@ -1101,7 +1141,26 @@ function useMarket() {
           )
         )
       )
-      .then(setArtifacts)
+      .then((afx) => {
+        // check if currentOwner changed or if no longer exists
+        const artifactsPendingUpdate = artifactsPending.filter((artifact) => {
+          // if either of these occurred, remove from pending
+          const artifactUpdate = afx.find((a) => a.id === artifact.id);
+          const wasRemoved = !afx.map((a) => a.id).includes(artifact.id);
+          const ownerChanged =
+            artifactUpdate &&
+            artifactUpdate.currentOwner !== artifact.currentOwner;
+          if (wasRemoved || ownerChanged) return false;
+          else return true;
+        });
+
+        // if pending list changed, save it
+        if (artifactsPending.length !== artifactsPendingUpdate.length)
+          setArtifactsPending(artifactsPendingUpdate);
+
+        // save latest artifacts
+        setArtifacts(afx);
+      })
       .then(() => setLoading(false))
       .catch(setError);
 
@@ -1118,8 +1177,15 @@ function useMarket() {
     data: {
       artifacts,
       artifactsListed,
+      artifactsPending,
+      artifactsPendingIds: artifactsPending.map((a) => a.id),
       isArtifactOwned: (a) =>
         a.owner?.toLowerCase() === df.account.toLowerCase(),
+      isArtifactPending: (a) =>
+        artifactsPending.map((b) => b.id).includes(a.id),
+      addArtifactToPending,
+      removeArtifactFromPending,
+      withdrawArtifact,
       marketContract: marketContract?.data,
     },
     loading: marketContract.loading || loading,
@@ -1134,11 +1200,16 @@ function useInventory() {
   const [error, setError] = useState();
 
   useEffect(() => {
-    df.contractsAPI
-      .getPlayerArtifacts(df.account)
-      .then(setArtifacts)
-      .then(() => setLoading(false))
-      .catch(setError);
+    const fetchInventory = () =>
+      df.contractsAPI
+        .getPlayerArtifacts(df.account)
+        .then(setArtifacts)
+        .then(() => setLoading(false))
+        .catch(setError);
+
+    fetchInventory();
+    const poll = setInterval(fetchInventory, 1000);
+    return () => clearInterval(poll);
   }, []);
 
   return {
@@ -1208,12 +1279,13 @@ function useWallet() {
 // #endregion
 
 // #region Style Helpers
-function styleButton(theme, isActive) {
+function styleButton(theme, isActive, disabled) {
   const styleBase = {
     padding: "2px 8px",
     border: 0,
     color: isActive ? colors.gray.dfblack : colors.gray,
     outline: "none",
+    cursor: disabled ? "default" : "pointer",
   };
 
   return { ...styleBase, ...themeButton(theme, isActive) };
