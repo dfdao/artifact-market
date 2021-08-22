@@ -5,6 +5,7 @@
   "main": "plugins/artifact-market.js",
   "scripts": {
     "dev": "df-plugin-dev-server",
+    "publish": "cp plugins/artifact-market.js web/plugin.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
