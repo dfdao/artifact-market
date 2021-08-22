@@ -24,7 +24,7 @@ const APPROVAL_ABI =
 const CACHE_KEY = "ARTIFACT-MARKET";
 const APPROVAL_KEY = "APPROVAL-CONTRACT";
 const MARKET_KEY = "MARKET-CONTRACT";
-const PENDING_KEY = "PENDING-TRANSACTIONS";
+const POLL_INTERVAL = 5000;
 
 // Dark Forest Helpers - ideally these would be imported from cdn
 
@@ -1147,7 +1147,7 @@ function useMarket() {
     // start polling once we have marketContract.data
     if (marketContract.data) {
       fetchMarket();
-      const poll = setInterval(fetchMarket, 1000);
+      const poll = setInterval(fetchMarket, POLL_INTERVAL);
       return () => clearInterval(poll);
     }
   }, [marketContract.data]);
@@ -1187,7 +1187,7 @@ function useInventory() {
         .catch(setError);
 
     fetchInventory();
-    const poll = setInterval(fetchInventory, 1000);
+    const poll = setInterval(fetchInventory, POLL_INTERVAL);
     return () => clearInterval(poll);
   }, []);
 
