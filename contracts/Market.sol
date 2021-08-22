@@ -15,10 +15,11 @@ contract Market{
     }
 
     address public admin;  // The admin can reset the token contract after each new round
+    address public pendingAdmin; // the pending admin in case admin transfers ownership
     uint256 public endDate;
     mapping(uint256 => Listing) public listings; // all listings 
     
-    DarkForestTokens private DFTokens; 
+    IERC721 private DFTokens; 
         
     constructor(address tokensAddress, uint256 date){
         admin = msg.sender; // admin can upgrade to new rounds
@@ -80,6 +81,16 @@ contract Market{
         require(msg.sender == admin, "admin function only");
         endDate = date;
         DFTokens = IERC721(tokens);
+    }
+
+    function giveOwnership(address newOwner) external{
+        require(msg.sender == admin, "admin function only");
+        pendingAdmin = newOwner;
+    }
+
+    function acceptOwnership() external{
+        require(msg.sender == pendingAdmin, "you are not the pending admin");
+        admin = pendingAdmin;
     }
 
 }
