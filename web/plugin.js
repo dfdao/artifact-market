@@ -788,14 +788,6 @@ function Market() {
 
   if (loading) return html`<${Loading} />`;
 
-  if (error)
-    return html`
-      <div>
-        <h1>Something went wrong...</h1>
-        <p>${JSON.stringify(error, null, 2)}</p>
-      </div>
-    `;
-
   if (activeArtifact)
     return html`
       <${MarketBuy}
@@ -834,6 +826,7 @@ function Market() {
                 />
               `}
       />
+      <${ErrorLabel} error=${error} />
     </div>
   `;
 }
@@ -902,14 +895,6 @@ function Listings() {
 
   if (loading) return html`<${Loading} />`;
 
-  if (error)
-    return html`
-      <div>
-        <h1>Something went wrong...</h1>
-        <p>${JSON.stringify(error, null, 2)}</p>
-      </div>
-    `;
-
   return html`
     <div style=${artifactsStyle}>
       <${ArtifactsMarket}
@@ -927,6 +912,7 @@ function Listings() {
           />
         `}
       />
+      <${ErrorLabel} error=${error} />
     </div>
   `;
 }
@@ -943,14 +929,6 @@ function Inventory() {
   };
 
   if (loading) return html`<${Loading} />`;
-
-  if (error)
-    return html`
-      <div>
-        <h1>Something went wrong...</h1>
-        <p>${JSON.stringify(error, null, 2)}</p>
-      </div>
-    `;
 
   if (activeArtifact)
     return html`
@@ -980,6 +958,7 @@ function Inventory() {
           `;
         }}
       />
+      <${ErrorLabel} error=${error} />
     </div>
   `;
 }
