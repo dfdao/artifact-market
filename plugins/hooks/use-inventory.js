@@ -20,9 +20,7 @@ export function useInventory() {
   }, []);
 
   return {
-    data: {
-      artifacts,
-    },
+    data: { artifacts },
     loading,
     error,
   };

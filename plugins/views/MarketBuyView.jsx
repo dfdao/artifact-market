@@ -1,30 +1,21 @@
 import { h } from "preact";
 import { useState } from "preact/hooks";
+import { useMarket } from "../hooks";
 import { Button } from "../components/Button";
 import { ArtifactsHeaderBuySell } from "../components/ArtifactsHeaderBuySell";
 import { ArtifactMarket } from "../components/ArtifactMarket";
 import { ArtifactDetails } from "../components/ArtifactDetails";
 import { ErrorLabel } from "../components/ErrorLabel";
-import { BigNumber } from "@ethersproject/bignumber";
 
-export function MarketBuyView({ artifact, setActiveArtifact, market }) {
+export function MarketBuyView({ artifact, setActiveArtifact }) {
   const [error, setError] = useState();
+  const { buyArtifact } = useMarket();
   const styleInventoryBuy = { padding: 8 };
 
-  const buyArtifact = () => {
-    market.data.contract
-      .buy(BigNumber.from("0x" + artifact.id), {
-        value: artifact.priceRaw,
-        gasLimit: 250000,
-      })
-      .then(() => {
-        market.data.addArtifactToPending(artifact);
-        setActiveArtifact(false);
-      })
-      .catch((err) => {
-        console.log(err);
-        setError(err);
-      }); // catch error (in case of tx failure or something else)
+  const onClickBuy = () => {
+    buyArtifact(artifact)
+      .then(() => setActiveArtifact())
+      .catch(setError);
   };
 
   return (
@@ -44,14 +35,14 @@ export function MarketBuyView({ artifact, setActiveArtifact, market }) {
       >
         <Button
           theme="green"
-          onClick={buyArtifact}
+          onClick={onClickBuy}
           style={{ width: "192px" }}
           children="buy"
         />
 
         <Button
           theme="red"
-          onClick={() => setActiveArtifact(false)}
+          onClick={() => setActiveArtifact()}
           style={{ width: "192px" }}
           children="cancel"
         />
