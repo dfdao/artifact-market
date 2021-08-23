@@ -38,16 +38,18 @@ export function HelpView() {
       <Detail title="twitter" description={<Link url={TWITTER_URL} />} />
 
       <br />
+      <h1 style={styles.warning}>Warning</h1>
       <p>
-        <span style={styles.warning}>Warning: </span>The smart contract used for
-        this marketplace has not been audited, use at your own risk.
+        The smart contract written for this marketplace has not been audited,
+        use at your own risk.
       </p>
       <br />
+      <h1 style={styles.danger}>Danger</h1>
       <p>
-        <span style={styles.danger}>Danger: </span>Plugins are evaluated in the
-        context of your game and can access all of your private information
-        (including private key!). Plugins can dynamically load data, which can
-        be switched out from under you!!! Use these plugins at your own risk.
+        Plugins are evaluated in the context of your game and can access all of
+        your private information (including private key!). Plugins can
+        dynamically load data, which can be switched out from under you!!! Use
+        these plugins at your own risk.
       </p>
       <br />
       <p>
