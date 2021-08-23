@@ -1,9 +1,8 @@
 import { useState, useEffect } from "preact/hooks";
-import { useApprovalContract } from "./use-approval-contract";
-import { MARKET_ADDRESS } from "../helpers/constants";
+import { useContract } from "./";
 
 export function useApproval() {
-  const approvalContract = useApprovalContract();
+  const { approval, marketAddress, ...rest } = useContract();
   const [isApproved, setIsApproved] = useState();
   const [loading, setLoading] = useState();
   const [error, setError] = useState();
@@ -11,19 +10,12 @@ export function useApproval() {
   if (error) console.log(error);
 
   useEffect(() => {
-    const isApprovedForAll = approvalContract.data?.contract.isApprovedForAll;
-    const setApproved = approvalContract.data?.contract.setApprovalForAll;
-
-    if (
-      isApprovedForAll &&
-      !isApproved &&
-      !loading &&
-      !approvalContract.loading
-    ) {
+    if (!isApproved && !loading) {
       setLoading(true);
-      isApprovedForAll(df.account, MARKET_ADDRESS)
+      approval
+        .isApprovedForAll(df.account, marketAddress)
         .then((approved) => {
-          if (!approved) return setApproved(MARKET_ADDRESS, true);
+          if (!approved) return approval.setApprovalForAll(marketAddress, true);
           return;
         })
         .then(() => {
@@ -35,14 +27,13 @@ export function useApproval() {
           setLoading(false);
         });
     }
-  }, [approvalContract.data?.contract]);
+  }, []);
 
   return {
     data: {
       isApproved,
-      approvalContract: approvalContract.data,
     },
-    loading: loading || approvalContract.loading,
-    error: error || approvalContract.error,
+    loading,
+    error,
   };
 }

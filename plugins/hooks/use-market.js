@@ -1,11 +1,11 @@
 import { useState, useEffect } from "preact/hooks";
-import { useMarketContract } from "./use-market-contract";
-import { MARKET_ADDRESS, POLL_INTERVAL } from "../helpers/constants";
 import { BigNumber } from "@ethersproject/bignumber";
 import { formatEther } from "@ethersproject/units";
+import { POLL_INTERVAL } from "../helpers/constants";
+import { useContract } from "./";
 
 export function useMarket() {
-  const marketContract = useMarketContract();
+  const { market, marketAddress } = useContract();
   const [artifacts, setArtifacts] = useState([]);
   const [artifactsPending, setArtifactsPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,21 +25,21 @@ export function useMarket() {
   }
 
   const withdrawArtifact = (artifact) => {
-    marketContract.data?.contract
+    market
       .unlist(BigNumber.from("0x" + artifact.id))
       .then(() => addArtifactToPending(artifact))
-      .catch((e) => {
-        console.log(e);
+      .catch((err) => {
+        console.log(err);
       });
   };
 
   const fetchMarket = () =>
     df.contractsAPI
-      .getPlayerArtifacts(MARKET_ADDRESS)
+      .getPlayerArtifacts(marketAddress)
       .then((afx) =>
         Promise.all(
           afx.map(async (artifact) =>
-            marketContract.data.contract
+            market
               .listings(BigNumber.from("0x" + artifact.id))
               .then(([owner, priceRaw]) => ({
                 ...artifact,
@@ -75,13 +75,10 @@ export function useMarket() {
       .catch(setError);
 
   useEffect(() => {
-    // start polling once we have marketContract.data
-    if (marketContract.data) {
-      fetchMarket();
-      const poll = setInterval(fetchMarket, POLL_INTERVAL);
-      return () => clearInterval(poll);
-    }
-  }, [marketContract.data]);
+    fetchMarket();
+    const poll = setInterval(fetchMarket, POLL_INTERVAL);
+    return () => clearInterval(poll);
+  }, []);
 
   return {
     data: {
@@ -96,10 +93,11 @@ export function useMarket() {
       addArtifactToPending,
       removeArtifactFromPending,
       withdrawArtifact,
-      marketContract: marketContract?.data,
+      contract: market,
+      address: marketAddress,
     },
-    loading: marketContract.loading || loading,
-    error: marketContract.error || error,
+    loading,
+    error,
     refetch: fetchMarket,
   };
 }

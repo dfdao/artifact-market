@@ -12,7 +12,7 @@ export function MarketBuyView({ artifact, setActiveArtifact, market }) {
   const styleInventoryBuy = { padding: 8 };
 
   const buyArtifact = () => {
-    market.data.marketContract?.contract
+    market.data.contract
       .buy(BigNumber.from("0x" + artifact.id), {
         value: artifact.priceRaw,
         gasLimit: 250000,
