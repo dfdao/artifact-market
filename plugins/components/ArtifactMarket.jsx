@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { Raritycolors } from "../helpers/constants";
+import { Raritycolors } from "../helpers/theme";
 import { ArtifactTypeNames } from "@darkforest_eth/types";
 import { UpgradeStatInfo } from "./UpgradeStatInfo";
 

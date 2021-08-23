@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { colors } from "../helpers/constants";
+import { colors } from "../helpers/theme";
 
 const styles = {
   marginBottom: 16,

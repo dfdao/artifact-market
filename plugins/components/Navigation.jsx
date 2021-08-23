@@ -1,7 +1,7 @@
 import { h } from "preact";
 import { useState } from "preact/hooks";
 import { useWallet } from "../hooks/use-wallet";
-import { colors } from "../helpers/constants";
+import { colors } from "../helpers/theme";
 import { Button } from "../components/Button";
 
 const styles = {
@@ -20,7 +20,7 @@ const styles = {
     padding: "8px",
     gridColumnGap: "8px",
     justifyContent: "flex-start",
-    gridTemplateColumns: "auto auto auto 1fr",
+    gridTemplateColumns: "auto auto auto auto 1fr",
     alignItems: "center",
     bottom: 0,
     width: "100%",
