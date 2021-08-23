@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { useState } from "preact/hooks";
+import { useState, useEffect } from "preact/hooks";
 import { useApproval, useMarket } from "../hooks";
 import { ArtifactsHeaderBuySell } from "../components/ArtifactsHeaderBuySell";
 import { ArtifactMarket } from "../components/ArtifactMarket";
@@ -12,14 +12,23 @@ export function InventorySellView({ artifact, setActiveArtifact }) {
   useApproval();
   const { listArtifact } = useMarket();
   const [price, setPrice] = useState(0);
+  const [confirm, setConfirm] = useState(false);
   const [error, setError] = useState();
   const styleInventorySell = { padding: 8 };
+  const minPrice = 0;
+  const maxPrice = 1000000;
 
+  const onClickConfirm = () => setConfirm(true);
   const onClickList = () => {
     listArtifact(artifact, price)
       .then(() => setActiveArtifact(false))
       .catch(setError);
   };
+
+  useEffect(() => {
+    if (price < minPrice) setPrice(minPrice);
+    if (price > maxPrice) setPrice(maxPrice);
+  }, [price]);
 
   return (
     <div style={styleInventorySell}>
@@ -38,7 +47,8 @@ export function InventorySellView({ artifact, setActiveArtifact }) {
       >
         <Input
           type="number"
-          min="0"
+          min={minPrice}
+          max={maxPrice}
           step="1"
           value={price}
           onChange={setPrice}
@@ -46,10 +56,11 @@ export function InventorySellView({ artifact, setActiveArtifact }) {
         />
 
         <Button
-          theme="green"
+          children={confirm ? "execute list" : "list"}
+          theme={confirm ? "green" : "default"}
           style={{ width: "128px" }}
-          children="list"
-          onClick={onClickList}
+          onClick={confirm ? onClickList : onClickConfirm}
+          disabled={price === ""}
         />
 
         <Button

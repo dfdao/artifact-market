@@ -9,9 +9,9 @@ import { ErrorLabel } from "../components/ErrorLabel";
 
 export function MarketBuyView({ artifact, setActiveArtifact }) {
   const { balance } = useWallet();
-  const [error, setError] = useState();
-  const [confirm, setConfirm] = useState(false);
   const { buyArtifact } = useMarket();
+  const [confirm, setConfirm] = useState(false);
+  const [error, setError] = useState();
   const styleInventoryBuy = { padding: 8 };
   const insufficientFunds = balance < artifact.price;
 
