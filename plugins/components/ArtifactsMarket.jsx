@@ -35,8 +35,8 @@ export function ArtifactsMarket({ empty, artifacts = [], setActiveArtifact }) {
       return 0;
     }
     if (sort === ArtifactSortType.price) {
-      if (a.price > b.price) return reverse ? 1 : -1;
-      if (a.price < b.price) return reverse ? -1 : 1;
+      if (Number(a.price) > Number(b.price)) return reverse ? 1 : -1;
+      if (Number(a.price) < Number(b.price)) return reverse ? -1 : 1;
       return 0;
     }
     const valA = formatMultiplierArtifact(a, sort);
