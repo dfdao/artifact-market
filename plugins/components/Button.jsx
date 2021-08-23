@@ -31,6 +31,7 @@ function styleButton(theme, isActive, disabled) {
     color: isActive ? colors.gray.dfblack : colors.gray,
     outline: "none",
     cursor: disabled ? "default" : "pointer",
+    opacity: disabled ? 0.5 : 1,
   };
 
   return { ...styleBase, ...themeButton(theme, isActive) };
