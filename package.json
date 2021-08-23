@@ -1,36 +1,32 @@
 {
-  "name": "df-artifact-market",
-  "version": "0.0.0",
-  "description": "A plugin which allows darkforest players to sell their artifacts to each other in game.",
-  "main": "plugins/artifact-market.js",
+  "name": "artifact-market",
+  "version": "1.0.0",
+  "description": "Buy and sell artifacts in Dark Forest with the Artifact Market plugin",
+  "homepage": "https://darkforest.market",
+  "repository": "github:dfdao/artifact-market",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dfdao/artifact-market/issues"
+  },
+  "keywords": [
+    "dark forest",
+    "smart contract",
+    "artifact market",
+    "ethereum",
+    "xdai",
+    "nft"
+  ],
   "scripts": {
     "dev": "df-plugin-dev-server --glob plugins/plugin.jsx --preact",
     "build": "df-plugin-dev-server bundle --glob plugins/plugin.jsx --outdir=web --preact",
     "hash": "npm run build && node scripts/get-hash.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zk-FARTs/DF-Artifact-Market.git"
-  },
-  "keywords": [
-    "dark forest",
-    "smart contract",
-    "ethereum",
-    "xdai",
-    "nft"
-  ],
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/zk-FARTs/DF-Artifact-Market/issues"
-  },
-  "homepage": "https://github.com/zk-FARTs/DF-Artifact-Market#readme",
   "devDependencies": {
     "@darkforest_eth/types": "^6.5.5",
     "@ethersproject/bignumber": "^5.4.1",
     "@ethersproject/units": "^5.4.0",
     "@projectsophon/df-plugin-dev-server": "^1.4.0",
-    "crypto": "^1.0.1",
     "dotenv": "^10.0.0",
     "preact": "^10.5.14"
   }

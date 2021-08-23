@@ -1,6 +1,6 @@
 import { h } from "preact";
 import { ArtifactSortType } from "../helpers/types";
-import { colors } from "../helpers/constants";
+import { colors } from "../helpers/theme";
 import { ArtifactHeaderButton } from "./ArtifactHeaderButton";
 import { Input } from "./Input";
 import {
