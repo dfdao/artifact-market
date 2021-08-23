@@ -1,6 +1,6 @@
 import { h } from "preact";
 import { useState } from "preact/hooks";
-import { useMarket } from "../hooks";
+import { useMarket, useWallet } from "../hooks";
 import { Button } from "../components/Button";
 import { ArtifactsHeaderBuySell } from "../components/ArtifactsHeaderBuySell";
 import { ArtifactMarket } from "../components/ArtifactMarket";
@@ -8,10 +8,14 @@ import { ArtifactDetails } from "../components/ArtifactDetails";
 import { ErrorLabel } from "../components/ErrorLabel";
 
 export function MarketBuyView({ artifact, setActiveArtifact }) {
+  const { balance } = useWallet();
   const [error, setError] = useState();
+  const [confirm, setConfirm] = useState(false);
   const { buyArtifact } = useMarket();
   const styleInventoryBuy = { padding: 8 };
+  const insufficientFunds = balance < artifact.price;
 
+  const onClickConfirm = () => setConfirm(true);
   const onClickBuy = () => {
     buyArtifact(artifact)
       .then(() => setActiveArtifact())
@@ -34,10 +38,11 @@ export function MarketBuyView({ artifact, setActiveArtifact }) {
         }}
       >
         <Button
-          theme="green"
-          onClick={onClickBuy}
+          theme={confirm ? "green" : "default"}
+          disabled={insufficientFunds}
+          onClick={confirm ? onClickBuy : onClickConfirm}
           style={{ width: "192px" }}
-          children="buy"
+          children={buttonBuyText({ confirm, insufficientFunds })}
         />
 
         <Button
@@ -49,4 +54,10 @@ export function MarketBuyView({ artifact, setActiveArtifact }) {
       </div>
     </div>
   );
+}
+
+function buttonBuyText({ confirm, insufficientFunds }) {
+  if (insufficientFunds) return "insufficient funds";
+  if (confirm) return "execute buy";
+  return "buy";
 }
