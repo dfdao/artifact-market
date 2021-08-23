@@ -2,6 +2,7 @@ import { h } from "preact";
 import { ArtifactRarityNames, BiomeNames } from "@darkforest_eth/types";
 import { Detail } from "./Detail";
 import { formatDateTime } from "../helpers/format";
+import { playerName, planetName } from "../helpers/df";
 
 const style = {
   margin: "16px auto",
@@ -17,12 +18,23 @@ export function ArtifactDetails({ artifact }) {
 
       <Detail title="biome" description={BiomeNames[artifact.planetBiome]} />
 
-      <Detail title="seller" description={artifact.owner || df.account} />
-      <Detail title="discoverer" description={artifact.discoverer} />
+      <Detail
+        title="seller"
+        description={playerName(artifact.owner || df.account)}
+      />
+      <Detail
+        title="discoverer"
+        description={playerName(artifact.discoverer)}
+      />
 
       <Detail
         title="discovered"
-        description={formatDateTime(artifact.mintedAtTimestamp) || "never"}
+        description={formatDateTime(artifact.mintedAtTimestamp)}
+      />
+
+      <Detail
+        title="discovered on"
+        description={planetName(artifact.planetDiscoveredOn)}
       />
 
       <Detail
