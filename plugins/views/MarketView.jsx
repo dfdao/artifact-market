@@ -1,6 +1,6 @@
 import { h } from "preact";
 import { useState } from "preact/hooks";
-import { useMarket } from "../hooks/use-market";
+import { useMarket, useTransactions } from "../hooks";
 import { ArtifactsMarket } from "../components/ArtifactsMarket";
 import { MarketBuyView } from "./MarketBuyView";
 import { Button } from "../components/Button";
@@ -8,8 +8,10 @@ import { Loading } from "../components/Loading";
 import { ErrorLabel } from "../components/ErrorLabel";
 
 export function MarketView() {
-  const { data, loading, error } = useMarket();
-  const [activeArtifact, setActiveArtifact] = useState(false);
+  const { data, loading, error, withdrawArtifact, isArtifactOwned } =
+    useMarket();
+  const { isArtifactPending } = useTransactions();
+  const [activeArtifact, setActiveArtifact] = useState();
   const artifactsStyle = {
     display: "grid",
     width: "100%",
@@ -22,7 +24,6 @@ export function MarketView() {
       <MarketBuyView
         artifact={activeArtifact}
         setActiveArtifact={setActiveArtifact}
-        market={{ data, loading, error }}
       />
     );
 
@@ -36,23 +37,23 @@ export function MarketView() {
         empty="There aren't currently any artifacts listed for sale."
         artifacts={data.artifacts}
         setActiveArtifact={(artifact) =>
-          data.isArtifactOwned(artifact) ? (
+          isArtifactOwned(artifact) ? (
             <Button
               children={
-                data.isArtifactPending(artifact) ? (
+                isArtifactPending(artifact) ? (
                   <Loading length={3} padding={0} />
                 ) : (
                   "withdraw"
                 )
               }
               style={{ width: "100%" }}
-              onClick={() => data.withdrawArtifact(artifact)}
-              disabled={data.isArtifactPending(artifact)}
+              onClick={() => withdrawArtifact(artifact)}
+              disabled={isArtifactPending(artifact)}
             />
           ) : (
             <Button
               children={
-                data.isArtifactPending(artifact) ? (
+                isArtifactPending(artifact) ? (
                   <Loading length={3} padding={0} />
                 ) : (
                   "view"
@@ -60,7 +61,7 @@ export function MarketView() {
               }
               style={{ width: "100%" }}
               onClick={() => setActiveArtifact(artifact)}
-              disabled={data.isArtifactPending(artifact)}
+              disabled={isArtifactPending(artifact)}
             />
           )
         }
