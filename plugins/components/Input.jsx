@@ -8,6 +8,7 @@ export function Input({
   placeholder = "",
   step,
   min,
+  max,
 }) {
   const inputStyle = {
     outline: "none",
@@ -25,6 +26,7 @@ export function Input({
       type={type}
       step={step}
       min={min}
+      max={max}
       value={value}
       placeholder={placeholder}
       onInput={(e) => onChange(e.target.value)}
