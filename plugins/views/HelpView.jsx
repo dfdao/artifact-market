@@ -27,6 +27,7 @@ const styles = {
     color: colors.dfred,
   },
   logo: {
+    display: "block",
     width: 64,
   },
   logoImage: {
