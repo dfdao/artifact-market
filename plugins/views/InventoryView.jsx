@@ -1,7 +1,6 @@
 import { h } from "preact";
 import { useState } from "preact/hooks";
-import { useMarket } from "../hooks/use-market";
-import { useInventory } from "../hooks/use-inventory";
+import { useTransactions, useInventory } from "../hooks";
 import { ArtifactsInventory } from "../components/ArtifactsInventory";
 import { Loading } from "../components/Loading";
 import { Button } from "../components/Button";
@@ -9,7 +8,7 @@ import { ErrorLabel } from "../components/ErrorLabel";
 import { InventorySellView } from "./InventorySellView";
 
 export function InventoryView() {
-  const market = useMarket();
+  const { isArtifactPending } = useTransactions();
   const { data, loading, error } = useInventory();
   const [activeArtifact, setActiveArtifact] = useState(false);
   const artifactsStyle = {
@@ -27,7 +26,6 @@ export function InventoryView() {
       <InventorySellView
         artifact={activeArtifact}
         setActiveArtifact={setActiveArtifact}
-        market={market}
       />
     );
 
@@ -41,7 +39,7 @@ export function InventoryView() {
           return (
             <Button
               children={
-                market.data.isArtifactPending(artifact) ? (
+                isArtifactPending(artifact) ? (
                   <Loading length={3} padding={0} />
                 ) : (
                   "view"
@@ -49,7 +47,7 @@ export function InventoryView() {
               }
               style={{ width: "100%" }}
               onClick={() => setActiveArtifact(artifact)}
-              disabled={market.data.isArtifactPending(artifact)}
+              disabled={isArtifactPending(artifact)}
             />
           );
         }}

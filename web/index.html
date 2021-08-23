@@ -3,11 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dark Forest - Artifact Market</title>
     <meta
       name="description"
+      content="Buy and sell artifacts in Dark Forest"
+    />
+    <meta property="og:title" content="Artifact Market" />
+    <!-- 70 char max for twitter -->
+    <meta property="og:url" content="https://darkforest.market" />
+    <meta property="og:image" content="https://darkforest.market/artifact-market.png" />
+    <meta property="image" content="https://darkforest.market/artifact-market.png">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@d_fdao" />
+    <meta name="twitter:title" content="Artifact Market">
+    <meta name="twitter:description" content="Buy and sell artifacts in Dark Forest">
+    <meta name="twitter:image" content="https://darkforest.market/artifact-market.png">
+    <!-- Size: The recommended size for an OG Image is 1.91:1. The recommended pixel dimensions are 1200:630 -->
+    <meta
+      property="og:description"
       content="Buy and sell artifacts from Dark Forest"
     />
+    <title>Artifact Market</title>
+
+    <link rel="stylesheet" href="df.css" />
 
     <style>
       html,
@@ -16,16 +33,101 @@
         margin: 0;
         padding: 0;
         width: 100%;
-        height: 100%;
-        place-content: center;
-        background: #1a212d;
-        color: white;
-        font-size: 20px;
-        font-family: monospace;
+        min-height: 100%;
+        justify-content: center;
+        font-family: Inconsolata, monospace;
+        color: #bbbbbb;
+        background-color: #151515;
+      }
+
+      main {
+        padding: 64px 32px;
+        max-width: 800px;
+      }
+
+      .divider {
+        margin: 32px;
+      }
+
+      a {
+        opacity: 0.8;
+      }
+
+      a:hover {
+        opacity: 1;
+      }
+
+      img {
+        width: 100%;
+        border-radius: 24px;
       }
     </style>
   </head>
   <body>
-    <pre>export { default } from "https://darkforest.market/plugin.js"</pre>
+    <main>
+      <h1>Artifact Market</h1>
+      <p class="text-muted">
+        Buy and sell artifacts in
+        <a href="https://zkga.me" target="_blank" class="text-dfblue"
+          >Dark Forest</a
+        >
+        with the Artifact Market plugin.
+      </p>
+      
+      <div class="divider"></div>
+
+      <img src="artifact-market.png" title="Artifact Market - Inventory" />
+
+      <div class="divider"></div>
+      
+      <h2>Features</h2>
+      <ul class="text-muted">
+        <li>- Buy, list and withdraw your artifacts on the marketplace</li>
+        <li>- Search to filter artifacts by name and rarity</li>
+        <li>- Sort lists by clicking the header icons</li>
+      </ul>
+      
+      <div class="divider"></div>
+      
+      <h2>Installation</h2>
+      <p class="text-muted">Create a new plugin and add the following code:</p>
+      <p>
+        <span class="text-dfmythic">export</span> { default }
+        <span class="text-dfmythic">from</span>
+        <span class="text-dfrare">"https://darkforest.market/plugin.js"</span>
+      </p>
+      
+      <div class="divider"></div>
+
+      <h2>Resources</h2>
+      <ul class="text-muted">
+        <li>- contract <a href="https://blockscout.com/xdai/mainnet/address/0x1e7cb1dbC6DaD80c86e8918382107238fb4562a8" class="text-dfblue" target="_blank">0x1e7cb1dbC6DaD80c86e8918382107238fb4562a8</a></li>
+        <li>- github <a href="https://github.com/dfdao/artifact-market" class="text-dfblue" target="_blank">github.com/dfdao/artifact-market</a></li>
+        <li>- issues <a href="https://github.com/dfdao/artifact-market/issues" class="text-dfblue" target="_blank">github.com/dfdao/artifact-market/issues</a></li>
+        <li>- twitter <a href="https://twitter.com/dfdao" class="text-dfblue" target="_blank">twitter.com/d_fdao</a></li>
+      </ul>
+
+      <div class="divider"></div>
+
+      <h2 class="text-dfyellow">Warning</h2>
+      <p class="text-muted">The smart contract written for this marketplace has not been audited, use at your own risk.</p>
+      
+      <br />
+      
+      <h2 class="text-dfred">Danger</h2>
+      <p class="text-muted">
+        Plugins are evaluated in the
+        context of your game and can access all of your private information
+        (including private key!). Plugins can dynamically load data, which can
+        be switched out from under you!!! Use these plugins at your own risk.
+      </p>
+      <br />
+      <pp class="text-muted">
+        You should not use any plugins that you haven't written yourself or by
+        someone you trust completely. You or someone you trust should control
+        the entire pipeline (such as imported dependencies) and should review
+        plugins before you use them.
+      </p>
+    </main>
   </body>
 </html>
