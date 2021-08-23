@@ -1,4 +1,4 @@
-import { colors } from "../helpers/constants";
+import { colors } from "../helpers/theme";
 import { StatIdx, StatNames } from "../helpers/types";
 
 export function getUpgradeStat(upgrade, stat) {
