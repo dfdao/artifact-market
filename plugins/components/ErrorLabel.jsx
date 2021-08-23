@@ -2,7 +2,8 @@ import { h } from "preact";
 import { colors } from "../helpers/constants";
 
 const styles = {
-  margin: "16px 0",
+  marginBottom: 16,
+  padding: 8,
   color: colors.dfred,
 };
 

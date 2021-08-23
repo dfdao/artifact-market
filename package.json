@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/zk-FARTs/DF-Artifact-Market#readme",
   "devDependencies": {
-    "@darkforest_eth/types": "^6.5.1",
+    "@darkforest_eth/types": "^6.5.5",
     "@ethersproject/bignumber": "^5.4.1",
     "@ethersproject/units": "^5.4.0",
     "@projectsophon/df-plugin-dev-server": "^1.4.0",

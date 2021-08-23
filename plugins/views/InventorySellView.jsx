@@ -17,7 +17,7 @@ export function InventorySellView({ artifact, setActiveArtifact, market }) {
   const styleInventorySell = { padding: 8 };
 
   const onClickList = () => {
-    market.data.marketContract?.contract
+    market.data.contract
       .list(BigNumber.from("0x" + artifact.id), parseEther(price.toString()), {
         gasLimit: 250000,
       })
