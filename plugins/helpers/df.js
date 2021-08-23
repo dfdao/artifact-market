@@ -4,21 +4,16 @@ import { MARKET_ADDRESS, APPROVAL_ADDRESS } from "../generated/contract";
 const { getPlanetName } = df.getProcgenUtils();
 
 export function planetName(locationId) {
-  if (locationId) {
-    // Fake a planet
-    return getPlanetName({ locationId });
-  } else {
-    return "No planet selected";
-  }
+  return getPlanetName({ locationId });
 }
 
-export function playerName(address) {
+export function playerName(address, trim) {
   if (address) {
     const twitter = df.getTwitter(address);
     if (twitter) {
       return twitter;
     } else {
-      return address.substring(0, 6);
+      return trim ? address.substring(0, 6) : address;
     }
   }
 
@@ -30,14 +25,11 @@ export function getAccount() {
 }
 
 export async function getContract() {
-  const market = await df.loadContract(MARKET_ADDRESS, MARKET_ABI);
-  const approval = await df.loadContract(APPROVAL_ADDRESS, APPROVAL_ABI);
-
   return {
-    market,
+    market: await df.loadContract(MARKET_ADDRESS, MARKET_ABI),
     marketAddress: MARKET_ADDRESS,
     marketABI: MARKET_ABI,
-    approval,
+    approval: await df.loadContract(APPROVAL_ADDRESS, APPROVAL_ABI),
     approvalAddress: APPROVAL_ADDRESS,
     approvalABI: APPROVAL_ABI,
   };
