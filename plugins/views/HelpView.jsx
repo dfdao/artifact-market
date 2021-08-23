@@ -54,8 +54,8 @@ export function HelpView() {
       <h1 style={styles.title}>Features</h1>
       <ul class="text-muted">
         <li>- Buy, list and withdraw your artifacts on the marketplace</li>
+        <li>- Sort artifacts by name, property values, and price</li>
         <li>- Search to filter artifacts by type and rarity</li>
-        <li>- Sort lists by clicking the header icons</li>
       </ul>
 
       <br />
