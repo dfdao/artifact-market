@@ -1,8 +1,9 @@
 import { h } from "preact";
 import { ArtifactRarityNames, BiomeNames } from "@darkforest_eth/types";
 import { Detail } from "./Detail";
+import { PlayerName } from "./PlayerName";
+import { PlanetName } from "./PlanetName";
 import { formatDateTime } from "../helpers/format";
-import { playerName, planetName } from "../helpers/df";
 
 const style = {
   margin: "16px auto",
@@ -20,11 +21,11 @@ export function ArtifactDetails({ artifact }) {
 
       <Detail
         title="seller"
-        description={playerName(artifact.owner || df.account)}
+        description={<PlayerName address={artifact.owner || df.account} />}
       />
       <Detail
         title="discoverer"
-        description={playerName(artifact.discoverer)}
+        description={<PlayerName address={artifact.discoverer} />}
       />
 
       <Detail
@@ -34,7 +35,7 @@ export function ArtifactDetails({ artifact }) {
 
       <Detail
         title="discovered on"
-        description={planetName(artifact.planetDiscoveredOn)}
+        description={<PlanetName address={artifact.planetDiscoveredOn} />}
       />
 
       <Detail

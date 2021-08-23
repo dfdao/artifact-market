@@ -1,23 +1,12 @@
 import { MARKET_ABI, APPROVAL_ABI } from "../generated/abi";
 import { MARKET_ADDRESS, APPROVAL_ADDRESS } from "../generated/contract";
 
-const { getPlanetName } = df.getProcgenUtils();
+const { getPlanetName, getPlayerColor } = df.getProcgenUtils();
+export const twitter = (address) => df.getTwitter(address);
+export const playerColor = getPlayerColor;
 
 export function planetName(locationId) {
   return getPlanetName({ locationId });
-}
-
-export function playerName(address, trim) {
-  if (address) {
-    const twitter = df.getTwitter(address);
-    if (twitter) {
-      return twitter;
-    } else {
-      return trim ? address.substring(0, 6) : address;
-    }
-  }
-
-  return "Unknown";
 }
 
 export function getAccount() {
