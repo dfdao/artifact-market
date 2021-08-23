@@ -1,0 +1,29 @@
+{
+  "name": "df-artifact-market",
+  "version": "0.0.0",
+  "description": "A plugin which allows darkforest players to sell their artifacts to each other in game.",
+  "main": "plugins/artifact-market.js",
+  "scripts": {
+    "dev": "df-plugin-dev-server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zk-FARTs/DF-Artifact-Market.git"
+  },
+  "keywords": [
+    "dark forest",
+    "smart contract",
+    "ethereum",
+    "xdai",
+    "nft"
+  ],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zk-FARTs/DF-Artifact-Market/issues"
+  },
+  "homepage": "https://github.com/zk-FARTs/DF-Artifact-Market#readme",
+  "devDependencies": {
+    "@projectsophon/df-plugin-dev-server": "^1.4.0"
+  }
+}
