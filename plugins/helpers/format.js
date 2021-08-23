@@ -55,7 +55,7 @@ export function formatPrice(numbers = 0) {
   const trim = (increment) => Math.round(value / increment);
 
   if (value < 10) return value.toFixed(2);
-  if (value <= thousand) return rounded;
+  if (value < thousand * 10) return formatCommas(rounded);
   if (rounded < million) return trim(thousand) + "k";
   if (rounded < billion) return trim(million) + "m";
   if (rounded < trillion) return trim(billion) + "b";
