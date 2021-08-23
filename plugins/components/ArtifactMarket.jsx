@@ -2,6 +2,7 @@ import { h } from "preact";
 import { Raritycolors } from "../helpers/theme";
 import { ArtifactTypeNames } from "@darkforest_eth/types";
 import { UpgradeStatInfo } from "./UpgradeStatInfo";
+import { formatPrice } from "../helpers/format";
 
 export function ArtifactMarket({ artifact, action }) {
   const artifactStyle = {
@@ -28,7 +29,7 @@ export function ArtifactMarket({ artifact, action }) {
           key={val}
         />
       ))}
-      <div>{artifact.price ? Number(artifact.price).toFixed(2) : ""}</div>
+      <div>{formatPrice(artifact.price)}</div>
       <div>{action}</div>
     </div>
   );

@@ -3,7 +3,7 @@ import { ArtifactRarityNames, BiomeNames } from "@darkforest_eth/types";
 import { Detail } from "./Detail";
 import { PlayerName } from "./PlayerName";
 import { PlanetName } from "./PlanetName";
-import { formatDateTime } from "../helpers/format";
+import { formatDateTime, formatCommas } from "../helpers/format";
 
 const style = {
   margin: "16px auto",
@@ -48,7 +48,10 @@ export function ArtifactDetails({ artifact }) {
         description={formatDateTime(artifact.lastDeactivated) || "never"}
       />
 
-      <Detail title="price" description={`${artifact.price} xDai`} />
+      <Detail
+        title="price"
+        description={`${formatCommas(artifact.price)} xDai`}
+      />
     </div>
   );
 }

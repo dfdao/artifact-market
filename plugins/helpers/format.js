@@ -41,3 +41,29 @@ export function formatDateTime(timestamp) {
   const date = new Date(timestamp * 1000);
   return `${date.toDateString()} ${date.toLocaleTimeString()}`;
 }
+
+const thousand = 1000;
+const million = thousand * 1000;
+const billion = million * 1000;
+const trillion = billion * 1000;
+const quadrillion = trillion * 1000;
+const quintillion = quadrillion * 1000;
+
+export function formatPrice(numbers = 0) {
+  const value = Number(numbers);
+  const rounded = Math.round(value);
+  const trim = (increment) => Math.round(value / increment);
+
+  if (value < 10) return value.toFixed(2);
+  if (value <= thousand) return rounded;
+  if (rounded < million) return trim(thousand) + "k";
+  if (rounded < billion) return trim(million) + "m";
+  if (rounded < trillion) return trim(billion) + "b";
+  if (rounded < quadrillion) return trim(trillion) + "t";
+  if (rounded < quintillion) return trim(quadrillion) + "q";
+  return "???";
+}
+
+export function formatCommas(numbers = 0) {
+  return numbers.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
