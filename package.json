@@ -1,6 +1,6 @@
 {
   "name": "artifact-market",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Buy and sell artifacts in Dark Forest with the Artifact Market plugin",
   "homepage": "https://darkforest.market",
   "repository": "github:dfdao/artifact-market",
