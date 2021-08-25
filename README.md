@@ -1,37 +1,24 @@
-# Artifact Market
+# Redwood
 
-Buy and sell artifacts in [Dark Forest](https://zkga.me) with the Artifact Market plugin.
+> **WARNING:** RedwoodJS software has not reached a stable version 1.0 and should not be considered suitable for production use. In the "make it work; make it right; make it fast" paradigm, Redwood is in the later stages of the "make it work" phase.
 
-![Dark Forest Artifact Market Plugin](https://darkforest.market/artifact-market.png)
+## Getting Started
+- [Tutorial](https://redwoodjs.com/tutorial/welcome-to-redwood): getting started and complete overview guide.
+- [Docs](https://redwoodjs.com/docs/introduction): using the Redwood Router, handling assets and files, list of command-line tools, and more.
+- [Redwood Community](https://community.redwoodjs.com): get help, share tips and tricks, and collaborate on everything about RedwoodJS.
 
-## Features
+### Setup
 
-- Buy, list and withdraw your artifacts on the marketplace
-- Search to filter artifacts by name and rarity
-- Sort lists by clicking the header icons
+We use Yarn as our package manager. To get the dependencies installed, just do this in the root directory:
 
-## Installation
-
-Create a new plugin and add the following code:
-
-```js
-export { default } from "https://darkforest.market/plugin.js";
+```terminal
+yarn install
 ```
 
-## Resources
+### Fire it up
 
-- website [darkforest.market](https://darkforest.market)
-- verified contract [0x1e7cb1dbC6DaD80c86e8918382107238fb4562a8](https://blockscout.com/xdai/mainnet/address/0x1e7cb1dbC6DaD80c86e8918382107238fb4562a8)
-- github [github.com/dfdao/artifact-market](https://github.com/dfdao/artifact-market)
-- issues [github.com/dfdao/artifact-market/issues](https://github.com/dfdao/artifact-market/issues)
-- twitter [twitter.com/d_fdao](https://twitter.com/d_fdao)
+```terminal
+yarn redwood dev
+```
 
-## Warning
-
-The smart contract written for this marketplace has not been audited, use at your own risk.
-
-## Danger
-
-Plugins are evaluated in the context of your game and can access all of your private information (including private key!). Plugins can dynamically load data, which can be switched out from under you!!! Use these plugins at your own risk.
-
-You should not use any plugins that you haven't written yourself or by someone you trust completely. You or someone you trust should control the entire pipeline (such as imported dependencies) and should review plugins before you use them.
+Your browser should open automatically to `http://localhost:8910` to see the web app. Lambda functions run on `http://localhost:8911` and are also proxied to `http://localhost:8910/.redwood/functions/*`. 

@@ -1,0 +1,33 @@
+{
+  "name": "artifact-market",
+  "version": "1.0.4",
+  "description": "Buy and sell artifacts in Dark Forest with the Artifact Market plugin",
+  "homepage": "https://darkforest.market",
+  "repository": "github:dfdao/artifact-market",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dfdao/artifact-market/issues"
+  },
+  "keywords": [
+    "dark forest",
+    "smart contract",
+    "artifact market",
+    "ethereum",
+    "xdai",
+    "nft"
+  ],
+  "scripts": {
+    "dev": "df-plugin-dev-server --glob plugins/plugin.jsx --preact",
+    "build": "df-plugin-dev-server bundle --glob plugins/plugin.jsx --outdir=web --preact",
+    "hash": "npm run build && node scripts/get-hash.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@darkforest_eth/types": "^6.5.5",
+    "@ethersproject/bignumber": "^5.4.1",
+    "@ethersproject/units": "^5.4.0",
+    "@projectsophon/df-plugin-dev-server": "^1.4.0",
+    "dotenv": "^10.0.0",
+    "preact": "^10.5.14"
+  }
+}
