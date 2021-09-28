@@ -13,18 +13,12 @@ contract Market{
         address owner;       // who owns the listed artifact
         uint256 buyoutPrice; // price of the artifact in xdai
     }
-
-    address public admin;  // The admin can reset the token contract after each new round
-    address public pendingAdmin; // the pending admin in case admin transfers ownership
-    uint256 public endDate;
     mapping(uint256 => Listing) public listings; // all listings 
     
     IERC721 private DFTokens; 
         
     constructor(address tokensAddress, uint256 date){
-        admin = msg.sender; // admin can upgrade to new rounds
         DFTokens = IERC721(tokensAddress);  
-        endDate = date;
     }
 
 
