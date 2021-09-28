@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.7;
 
 interface IERC721{
     function transferFrom(address from, address to, uint256 tokenID) external;
@@ -8,23 +8,34 @@ interface IERC721{
 
 
 contract Market{
-  
-    struct Listing{
-        address owner;       // who owns the listed artifact
-        uint256 buyoutPrice; // price of the artifact in xdai
-    }
-
+    
+    event Sale(
+        uint256 indexed id,
+        uint256 indexed price,
+        uint256 indexed round
+    );
+    
+    event Listing(
+        uint256 indexed id,
+        uint256 indexed price,
+        uint256 indexed round
+    );
+    
+    event Unlisting(
+        uint256 indexed id,
+        uint256 indexed price,
+        uint256 indexed round
+    );
+    
     address public admin;  // The admin can reset the token contract after each new round
     address public pendingAdmin; // the pending admin in case admin transfers ownership
-    uint256 public endDate;
-    mapping(uint256 => Listing) public listings; // all listings 
+    mapping(bytes32 => bytes32) public listings; // all listings 
+    mapping(uint256 => IERC721) public contracts; // the different token contracts supported
+    uint256 numContracts;
     
-    IERC721 private DFTokens; 
-        
-    constructor(address tokensAddress, uint256 date){
+    constructor(address tokensAddress){
         admin = msg.sender; // admin can upgrade to new rounds
-        DFTokens = IERC721(tokensAddress);  
-        endDate = date;
+        contracts[0] = IERC721(tokensAddress);  
     }
 
 
@@ -35,52 +46,45 @@ contract Market{
         require(success, "Address: unable to send value, recipient may have reverted");
     }
 
-    function list(uint256 tokenID, uint256 price) external  {
-        
-        listings[tokenID] = Listing({
-            owner: msg.sender,
-            buyoutPrice: price
-        });
-
-        DFTokens.transferFrom(msg.sender, address(this), tokenID);        
+    function list(uint256 tokenID, uint256 price, uint256 contractNo) external  {
+        listings[keccak256(abi.encode(tokenID,contractNo))] = keccak256(abi.encode(msg.sender,price));
+        contracts[contractNo].transferFrom(msg.sender, address(this), tokenID);
+        emit Listing(tokenID,price,contractNo);
     }
 
     // buying function. User input is the price they pay
-    function buy(uint256 tokenID) external payable  {
-        Listing memory oldListing = listings[tokenID];
-        
-        listings[tokenID]= Listing({
-            owner: address(0),
-            buyoutPrice: 0
-        });
-        require (msg.value == oldListing.buyoutPrice, "wrong value");
-        DFTokens.transferFrom(address(this), msg.sender, tokenID);
-        sendValue(payable(oldListing.owner), oldListing.buyoutPrice);
+    function buy(bytes32 listingHash, uint256 contractNo, uint256 tokenID, address seller) external payable  {
+        bytes32 oldListing = listings[listingHash];
+        delete listings[listingHash];
+        require(keccak256(abi.encode(tokenID,contractNo))==listingHash);
+        require(oldListing== keccak256(abi.encode(seller,msg.value)));
+        contracts[contractNo].transferFrom(address(this), msg.sender, tokenID);
+        sendValue(payable(seller), msg.value);
+        emit Sale(tokenID,msg.value,contractNo);
     }
     
     
     // Unlist a token you listed
     // Useful if you want your tokens back
-    function unlist (uint256 id) external {
-        address holder = listings[id].owner;
-        require(msg.sender == holder);
-        
-        listings[id]= Listing({
-            owner: address(0),
-            buyoutPrice: 0
-        });
-        
-        DFTokens.transferFrom(address(this), holder, id);
+    function unlist (uint256 price, uint256 id ,bytes32 listingHash, uint256 contractNo) external {
+        require(keccak256(abi.encode(msg.sender,price)) == listings[listingHash]);
+        delete listings[listingHash];
+        contracts[contractNo].transferFrom(address(this), msg.sender, id);
+        emit Unlisting(id,price,contractNo);
     }
 
 
     // ADMIN 
     // Change the tokens address between rounds
-    function newRound(uint256 date, address tokens) external{
-        require(block.timestamp>endDate,"too early");
+    // WARNING: the trust given to admin is quite high.
+    
+    // This function is where the danger is.
+    // If admin adds a custom contract that isn't actually ERC721 but instead does something possibly bad
+    // TODO: find out the severity of the bad things admin could do
+    function addContract(address tokens) external{
+        numContracts++;
         require(msg.sender == admin, "admin function only");
-        endDate = date;
-        DFTokens = IERC721(tokens);
+        contracts[numContracts] = IERC721(tokens);
     }
 
     function giveOwnership(address newOwner) external{
