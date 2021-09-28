@@ -73,25 +73,5 @@ contract Market{
         DFTokens.transferFrom(address(this), holder, id);
     }
 
-
-    // ADMIN 
-    // Change the tokens address between rounds
-    function newRound(uint256 date, address tokens) external{
-        require(block.timestamp>endDate,"too early");
-        require(msg.sender == admin, "admin function only");
-        endDate = date;
-        DFTokens = IERC721(tokens);
-    }
-
-    function giveOwnership(address newOwner) external{
-        require(msg.sender == admin, "admin function only");
-        pendingAdmin = newOwner;
-    }
-
-    function acceptOwnership() external{
-        require(msg.sender == pendingAdmin, "you are not the pending admin");
-        admin = pendingAdmin;
-    }
-
 }
 
