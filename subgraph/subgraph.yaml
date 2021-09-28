@@ -8,7 +8,7 @@ dataSources:
     name: Market
     network: xdai
     source:
-      address: "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8"
+      address: "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8" # need some way of having multiple subgraphs 
       abi: Market
       startBlock: 16895824
     mapping:
