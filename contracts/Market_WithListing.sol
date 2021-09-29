@@ -8,39 +8,42 @@ interface IERC721{
 
 
 contract Market{
-    
+
     struct Listing{
         address owner;       // who owns the listed artifact
         uint256 buyoutPrice; // price of the artifact in xdai
     }
-    
+
     event Sale(
         uint256 indexed id,
         uint256 indexed price,
-        uint256 indexed round
+        uint256 indexed round,
+        address seller
     );
-    
+
     event Listed(
         uint256 indexed id,
         uint256 indexed price,
-        uint256 indexed round
+        uint256 indexed round,
+        address seller
     );
-    
+
     event Unlisting(
         uint256 indexed id,
         uint256 indexed price,
-        uint256 indexed round
+        uint256 indexed round,
+        address seller
     );
-    
+
     address public admin;  // The admin can reset the token contract after each new round
     address public pendingAdmin; // the pending admin in case admin transfers ownership
     mapping(bytes32 => Listing) public listings; // all listings     mapping(uint256 => IERC721) public contracts; // the different token contracts supported
     mapping(uint256 => IERC721) public contracts; // the different token contracts supported
     uint256 numContracts;
-    
+
     constructor(address tokensAddress){
         admin = msg.sender; // admin can upgrade to new rounds
-        contracts[0] = IERC721(tokensAddress);  
+        contracts[0] = IERC721(tokensAddress);
     }
 
 
@@ -56,7 +59,7 @@ contract Market{
             owner: msg.sender,
             buyoutPrice: price
         });
-        
+
         contracts[contractNo].transferFrom(msg.sender, address(this), tokenID);
         emit Listed(tokenID,price,contractNo);
     }
@@ -70,8 +73,8 @@ contract Market{
         sendValue(payable(oldListing.owner), oldListing.buyoutPrice);
         emit Sale(tokenID,msg.value,contractNo);
     }
-    
-    
+
+
     // Unlist a token you listed
     // Useful if you want your tokens back
     function unlist (uint256 price, uint256 id ,bytes32 listingHash, uint256 contractNo) external {
@@ -83,10 +86,10 @@ contract Market{
     }
 
 
-    // ADMIN 
+    // ADMIN
     // Change the tokens address between rounds
     // WARNING: the trust given to admin is quite high.
-    
+
     // This function is where the danger is.
     // If admin adds a custom contract that isn't actually ERC721 but instead does something possibly bad
     // TODO: find out the severity of the bad things admin could do
