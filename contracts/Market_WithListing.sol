@@ -68,6 +68,7 @@ contract Market{
     function buy(bytes32 listingHash, uint256 contractNo, uint256 tokenID) external payable  {
         Listing memory oldListing = listings[listingHash];
         delete listings[listingHash];
+        require (keccak256(abi.encode(tokenID,contractNo)) == listingHash, "incorrect params");
         require (msg.value == oldListing.buyoutPrice, "wrong value");
         contracts[contractNo].transferFrom(address(this), msg.sender, tokenID);
         sendValue(payable(oldListing.owner), oldListing.buyoutPrice);
