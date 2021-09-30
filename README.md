@@ -21,7 +21,7 @@ export { default } from "https://darkforest.market/plugin.js";
 ## Resources
 
 - website [darkforest.market](https://darkforest.market)
-- verified contract [CHANGETHIS](https://blockscout.com/xdai/mainnet/address/CHANGETHIS)
+- verified contract [0xACE32941F16ec7f528067Ed4745e4411A42a5609](https://blockscout.com/xdai/mainnet/address/0xACE32941F16ec7f528067Ed4745e4411A42a5609)
 - github [github.com/dfdao/artifact-market](https://github.com/dfdao/artifact-market)
 - issues [github.com/dfdao/artifact-market/issues](https://github.com/dfdao/artifact-market/issues)
 - twitter [twitter.com/d_fdao](https://twitter.com/d_fdao)
