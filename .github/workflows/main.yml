@@ -4,11 +4,6 @@ name: CI
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push only for the main branch
-  push:
-    branches: [ main ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -30,4 +25,6 @@ jobs:
         env:
             private_key: ${{ secrets.ADMIN_PRIVATE_KEY }}
         run: |
-          python update.py "$private_key" 
+          cd scripts
+          npm install
+          node update.js "$private_key" 

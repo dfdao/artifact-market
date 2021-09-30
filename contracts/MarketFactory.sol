@@ -20,7 +20,7 @@ contract MarketV2{
     );
 
     event Unlisted(
-        uint indexed id,
+        uint indexed id
     );
   
     /**
@@ -49,7 +49,6 @@ contract MarketV2{
 
     // buying function. User input is the price they pay
     function buy(uint tokenID, address seller) external payable  {
-        bytes32 oldListing = listings[tokenID];
         delete listings[tokenID];
         require (keccak256(abi.encode(seller,msg.value)) == listings[tokenID], "wrong value / wrong address entered");
         DFTokens.transferFrom(address(this), msg.sender, tokenID);
@@ -73,9 +72,13 @@ contract MarketFactory{
     address public admin;  // The admin can reset the token contract after each new round
     address public pendingAdmin; // the pending admin in case admin transfers ownership
 
+    constructor(){
+        admin = msg.sender;
+    }
+
     function newRound(address newTokens) external{
         require(msg.sender == admin, "admin function only");
-        MarketV2 m = new MarketV2{salt: keccak256(abi.encode(address(this))}(newTokens);
+        new MarketV2{salt: keccak256(abi.encode(address(this)))}(newTokens);
     }
 
     function giveOwnership(address newOwner) external{

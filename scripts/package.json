@@ -1,0 +1,6 @@
+{
+    "dependencies": {
+        "@darkforest_eth/contracts": "*",
+        "ethers": "*"
+    }
+}
