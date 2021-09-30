@@ -6,7 +6,7 @@ export function handleBuy(tx: BuyCall): void {
   store.remove('ListedToken',id)
 }
 
-export function handleUnist(tx: UnlistCall): void {
+export function handleUnlist(tx: UnlistCall): void {
   let id = tx.inputs.id.toHexString()
   store.remove('ListedToken',id)
 }

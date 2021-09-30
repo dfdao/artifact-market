@@ -6,7 +6,7 @@ interface IERC721{
     function transferFrom(address from, address to, uint tokenID) external;
 }
 
-contract Market{
+contract MarketV2{
   
     event Sale(
         uint indexed id,
@@ -76,7 +76,7 @@ contract MarketFactory{
     
     function newRound(address newTokens) external{
         require(msg.sender == admin, "admin function only");
-        Market m = new Market{salt: keccak256(abi.encode(address(this))}(newTokens);
+        MarketV2 m = new MarketV2{salt: keccak256(abi.encode(address(this))}(newTokens);
     }
 
     function giveOwnership(address newOwner) external{
