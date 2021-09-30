@@ -72,8 +72,7 @@ contract MarketFactory{
 
     address public admin;  // The admin can reset the token contract after each new round
     address public pendingAdmin; // the pending admin in case admin transfers ownership
-    mapping (uint256=>address) public markets;
-    
+
     function newRound(address newTokens) external{
         require(msg.sender == admin, "admin function only");
         MarketV2 m = new MarketV2{salt: keccak256(abi.encode(address(this))}(newTokens);
