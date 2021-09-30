@@ -13,7 +13,7 @@ contract Market{
         uint256 indexed id,
         uint256 indexed price,
         uint256 indexed round,
-        address seller
+        address seller // maybe have this be buyer instead
     );
 
     event Listing(
@@ -52,28 +52,28 @@ contract Market{
     function list(uint256 tokenID, uint256 price, uint256 contractNo) external  {
         listings[keccak256(abi.encode(tokenID,contractNo))] = keccak256(abi.encode(msg.sender,price));
         contracts[contractNo].transferFrom(msg.sender, address(this), tokenID);
-        emit Listing(tokenID,price,contractNo);
+        emit Listing(tokenID,price,contractNo,msg.sender);
     }
 
     // buying function. User input is the price they pay
     function buy(bytes32 listingHash, uint256 contractNo, uint256 tokenID, address seller) external payable  {
         bytes32 oldListing = listings[listingHash];
         delete listings[listingHash];
-        require(keccak256(abi.encode(tokenID,contractNo))==listingHash);
-        require(oldListing== keccak256(abi.encode(seller,msg.value)));
+        require(keccak256(abi.encode(tokenID,contractNo))==listingHash,"wrong listing");
+        require(oldListing == keccak256(abi.encode(seller,msg.value)),"wrong value or seller");
         contracts[contractNo].transferFrom(address(this), msg.sender, tokenID);
         sendValue(payable(seller), msg.value);
-        emit Sale(tokenID,msg.value,contractNo);
+        emit Sale(tokenID,msg.value,contractNo,seller);
     }
 
 
     // Unlist a token you listed
     // Useful if you want your tokens back
-    function unlist (uint256 price, uint256 id ,bytes32 listingHash, uint256 contractNo) external {
-        require(keccak256(abi.encode(msg.sender,price)) == listings[listingHash]);
+    function unlist (bytes32 listingHash, uint256 contractNo, uint256 tokenID, uint256 price) external {
+        require(keccak256(abi.encode(msg.sender,price)) == listings[listingHash],"not owner / wrong price input");
         delete listings[listingHash];
-        contracts[contractNo].transferFrom(address(this), msg.sender, id);
-        emit Unlisting(id,price,contractNo);
+        contracts[contractNo].transferFrom(address(this), msg.sender, tokenID);
+        emit Unlisting(tokenID,price,contractNo,msg.sender);
     }
 
 

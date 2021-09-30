@@ -18,7 +18,7 @@ contract Market{
         uint256 indexed id,
         uint256 indexed price,
         uint256 indexed round,
-        address seller
+        address seller // maybe have this be buyer instead
     );
 
     event Listed(
@@ -61,7 +61,7 @@ contract Market{
         });
 
         contracts[contractNo].transferFrom(msg.sender, address(this), tokenID);
-        emit Listed(tokenID,price,contractNo);
+        emit Listed(tokenID,price,,msg.sender);
     }
 
     // buying function. User input is the price they pay
@@ -72,7 +72,7 @@ contract Market{
         require (msg.value == oldListing.buyoutPrice, "wrong value");
         contracts[contractNo].transferFrom(address(this), msg.sender, tokenID);
         sendValue(payable(oldListing.owner), oldListing.buyoutPrice);
-        emit Sale(tokenID,msg.value,contractNo);
+        emit Sale(tokenID,msg.value,contractNo,oldListing.owner);
     }
 
 
@@ -83,7 +83,7 @@ contract Market{
         require(msg.sender == holder);
         delete listings[listingHash];
         contracts[contractNo].transferFrom(address(this), msg.sender, id);
-        emit Unlisting(id,price,contractNo);
+        emit Unlisting(id,price,contractNo,msg.sender);
     }
 
 
