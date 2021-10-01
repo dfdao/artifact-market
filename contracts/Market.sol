@@ -13,12 +13,18 @@ contract Market{
         address owner;       // who owns the listed artifact
         uint256 buyoutPrice; // price of the artifact in xdai
     }
+
+    address public admin;  // The admin can reset the token contract after each new round
+    address public pendingAdmin; // the pending admin in case admin transfers ownership
+    uint256 public endDate;
     mapping(uint256 => Listing) public listings; // all listings 
     
     IERC721 private DFTokens; 
         
     constructor(address tokensAddress, uint256 date){
+        admin = msg.sender; // admin can upgrade to new rounds
         DFTokens = IERC721(tokensAddress);  
+        endDate = date;
     }
 
 
@@ -65,6 +71,26 @@ contract Market{
         });
         
         DFTokens.transferFrom(address(this), holder, id);
+    }
+
+
+    // ADMIN 
+    // Change the tokens address between rounds
+    function newRound(uint256 date, address tokens) external{
+        require(block.timestamp>endDate,"too early");
+        require(msg.sender == admin, "admin function only");
+        endDate = date;
+        DFTokens = IERC721(tokens);
+    }
+
+    function giveOwnership(address newOwner) external{
+        require(msg.sender == admin, "admin function only");
+        pendingAdmin = newOwner;
+    }
+
+    function acceptOwnership() external{
+        require(msg.sender == pendingAdmin, "you are not the pending admin");
+        admin = pendingAdmin;
     }
 
 }
