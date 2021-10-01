@@ -1,6 +1,6 @@
 // script for deploying new contract each round
 import { ethers as _ethers, network } from 'hardhat';
-import { TOKENS_ADDRESS } from '@darkforest-eth/contracts';
+import { TOKENS_ADDRESS } from '@darkforest_eth/contracts';
 
 async function main(){
     const abi =[
