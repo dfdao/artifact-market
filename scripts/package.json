@@ -1,0 +1,7 @@
+{
+    "type": "module",
+    "dependencies": {
+        "@darkforest_eth/contracts": "*",
+        "hardhat": "*"
+    }
+}
