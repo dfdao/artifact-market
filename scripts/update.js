@@ -7,13 +7,13 @@ async function main(){
         "function newRound(address newTokens)"
     ];
     const [deployer] = await _ethers.getSigners();
-    factory = new _ethers.Contract('0xACE32941F16ec7f528067Ed4745e4411A42a5609',abi,network.provider);
+    factory = new _ethers.Contract('0xd12E15f2EFE5acd79333E869930FFF0F679A46f9',abi,network.provider);
     const deployNewRound = await factory.newRound(TOKENS_ADDRESS);
     deployNewRound.wait();
 
-    //const from = "0xACE32941F16ec7f528067Ed4745e4411A42a5609";
-    //const salt = "0xa57605b2e24b1510bf138d6701553196cf98ca6c1e364020d33d6cef72d1be96";
-    //const creationHash = "0x86529331489ea7a1cc82140188cdba7d19dcd8f3d1376d95981e61e511308a42"; 
+    //const from = "0xd12E15f2EFE5acd79333E869930FFF0F679A46f9";
+    //const salt = "";
+    //const creationHash = ""; 
     //newRoundAddress(from,salt,creationHash);
 }
 
