@@ -23,8 +23,9 @@ jobs:
            python-version: '3.x'
       - name: update round
         env:
-            private_key: ${{ secrets.ADMIN_PRIVATE_KEY }}
+            ADMIN_PRIVATE_KEY: ${{ secrets.ADMIN_PRIVATE_KEY }}
+            HARDHAT_NETWORK: 'xdai'
         run: |
           cd scripts
           npm install
-          node update.js "$private_key" 
+          node update.js
