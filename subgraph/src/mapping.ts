@@ -1,5 +1,5 @@
 import { store } from "@graphprotocol/graph-ts";
-import { ListedToken } from "../generated/schema";
+import { ListedToken06r3 } from "../generated/schema";
 import { BuyCall, ListCall, UnlistCall } from "../generated/Market/Market"
 export function handleBuy(tx: BuyCall): void {
   let id = tx.inputs.tokenID.toHexString()
@@ -13,7 +13,7 @@ export function handleUnlist(tx: UnlistCall): void {
 
 export function handleList(tx: ListCall): void {
   let id = tx.inputs.tokenID.toHexString()
-  let token = new ListedToken(id)
+  let token = new ListedToken06r3(id)
   token.tokenID = tx.inputs.tokenID
   token.owner = tx.from.toHexString()
   token.price = tx.inputs.price

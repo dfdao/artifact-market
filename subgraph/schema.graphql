@@ -1,5 +1,12 @@
 
-type ListedToken @entity {
+type ListedToken06r3 @entity {
+  id: ID! 
+  tokenID: BigInt! # uint256
+  price: BigInt!   # uint256
+  owner:  String! # address
+}
+
+type ListedToken06r4 @entity {
   id: ID! 
   tokenID: BigInt! # uint256
   price: BigInt!   # uint256

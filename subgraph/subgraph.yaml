@@ -16,7 +16,8 @@ dataSources:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - ListingUpdate
+        - ListedToken
+        - Listing
       abis:
         - name: Market
           file: ./abis/Market.json
@@ -28,28 +29,28 @@ dataSources:
         - function: buy(uint256)
           handler: handleBuy
       file: ./src/mapping.ts
-templates:
   - kind: ethereum/contract
-    name: MarketV2
+    name: MarketEvents
     network: xdai
     source:
-      abi: MarketV2
+      address: "0x95f0C147109ca7b18882bbD7Dbc636F103D27cD5"
+      abi: MarketEvents
+      startBlock: 18363020
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       file: ./src/mappingV2.ts
       entities:
-        - ListingUpdate
+        - ListedToken
+        - Listing
       abis:
-        - name: MarketV2
-          file: ./abis/MarketV2.json
-        - name: Factory
-          file: ./abis/factory.json
+        - name: MarketEvents
+          file: ./abis/MarketEvents.json
       eventHandlers:
         - event: Sale(indexed uint256,indexed address)
           handler: handleSale
-        - event: Listed(indexed uint256, indexed uint256,indexed address)
+        - event: Listed(indexed uint256,indexed uint256,indexed address)
           handler: handleListed
         - event: Unlisted(indexed uint256)
           handler: handleUnlisted
