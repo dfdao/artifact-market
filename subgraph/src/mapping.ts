@@ -1,29 +1,41 @@
-import { store } from "@graphprotocol/graph-ts";
-import { ListedToken06R3, TokenSale } from "../generated/schema";
+import { store, Address } from "@graphprotocol/graph-ts";
+import { CurrentListing } from "../generated/schema";
 import { BuyCall, ListCall, UnlistCall } from "../generated/Market/Market"
+import { GETTERS_CONTRACT_ADDRESS } from '@darkforest_eth/contracts';
+import { DarkForestGetters } from '../generated/DarkForestCore/DarkForestGetters';
+import { getListFromContractData, getSaleFromContractData } from './helpers/decoders';
+import { hexStringToPaddedUnprefixed} from './helpers/converters'
+
+
+
 export function handleBuy(tx: BuyCall): void {
-  let id = tx.inputs.tokenID.toHexString()
-  let x = tx.transaction.hash.toHex()
-  let sale = new TokenSale(x)
-  sale.price = (store.get('ListedToken06R3',id) as ListedToken06R3).price
-  sale.tokenID = tx.inputs.tokenID
+
+  const getters = DarkForestGetters.bind(Address.fromString(GETTERS_CONTRACT_ADDRESS));
+  const rawArtifact = getters.bulkGetArtifactsByIds([tx.inputs.tokenID]);
+
+  let id = hexStringToPaddedUnprefixed(tx.inputs.tokenID.toHexString())
+  let sale = getSaleFromContractData(tx.transaction.hash.toHex(),rawArtifact[0])
+  sale.price = CurrentListing.load(id).price
   sale.round= '0.6 round 3'
+  sale.soldAtTimestamp = tx.block.timestamp
+  sale.buyerAddress = tx.from.toHexString()
   sale.save()
-  store.remove('ListedToken06R3',id)
+  store.remove('CurrentListing',id)
 }
 
 export function handleUnlist(tx: UnlistCall): void {
-  let id = tx.inputs.id.toHexString()
-  store.remove('ListedToken06R3',id)
+  let id = hexStringToPaddedUnprefixed(tx.inputs.id.toHexString())
+  store.remove('CurrentListing',id)
 }
 
 export function handleList(tx: ListCall): void {
-  let id = tx.inputs.tokenID.toHexString()
-  let token = new ListedToken06R3(id)
-  token.tokenID = tx.inputs.tokenID
-  token.owner = tx.from.toHexString()
+  const getters = DarkForestGetters.bind(Address.fromString(GETTERS_CONTRACT_ADDRESS));
+  const rawArtifact = getters.bulkGetArtifactsByIds([tx.inputs.tokenID]);
+  let token = getListFromContractData(tx.inputs.tokenID,rawArtifact[0])
+  token.sellerAddress = tx.from.toHexString()
   token.price = tx.inputs.price
-  
+  token.round = '0.6 round 3'
+  token.listedAtTimestamp = tx.block.timestamp
   token.save()
 }
 

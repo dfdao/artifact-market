@@ -25,7 +25,15 @@ jobs:
         env:
             ADMIN_PRIVATE_KEY: ${{ secrets.ADMIN_PRIVATE_KEY }}
             HARDHAT_NETWORK: 'xdai'
+            ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd scripts
-          npm install
-          node update.js
+          yarn
+          node subgraph.js test test
+          cd ../subgraph
+          yarn
+          yarn codegen
+          yarn deploy --access-token
+          git commit -a -m 'new round'
+          git push

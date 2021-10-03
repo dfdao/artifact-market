@@ -16,8 +16,9 @@ dataSources:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - ListedToken06R3
+        - CurrentListing
         - TokenSale
+        - Artifact
       abis:
         - name: Market
           file: ./abis/Market.json
@@ -33,7 +34,7 @@ dataSources:
     name: MarketEvents
     network: xdai
     source:
-      address: "0x95f0C147109ca7b18882bbD7Dbc636F103D27cD5"
+      address: 0x95f0C147109ca7b18882bbD7Dbc636F103D27cD5"
       abi: MarketEvents
       startBlock: 18363020
     mapping:
@@ -42,8 +43,9 @@ dataSources:
       language: wasm/assemblyscript
       file: ./src/mappingV2.ts
       entities:
-        - ListedToken06R4
+        - CurrentListing
         - TokenSale
+        - Artifact
       abis:
         - name: MarketEvents
           file: ./abis/MarketEvents.json
@@ -54,3 +56,37 @@ dataSources:
           handler: handleListed
         - event: Unlisted(indexed uint256)
           handler: handleUnlisted
+  - kind: ethereum/contract
+    name: DarkForestCore
+    network: xdai
+    source:
+      address: 0x27a166aE00C33Bef64306760aCd7C9fD3c2fEB74
+      abi: DarkForestCore
+      startBlock: 18361165
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      abis:
+        - name: DarkForestCore
+          file: ./abis/DarkForestCore_stripped.json
+        - name: DarkForestGetters
+          file: ./abis/DarkForestGetters_stripped.json
+      file: ./src/mapping.  
+  - kind: ethereum/contract
+    name: DarkForestCore
+    network: xdai
+    source:
+      address: 0x71340606E119de5a4dc3f1CA6bc5ec102a7fA7c0
+      abi: DarkForestCore
+      startBlock: 17562135
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      abis:
+        - name: DarkForestCore
+          file: ./abis/DarkForestCore_stripped.json
+        - name: DarkForestGetters
+          file: ./abis/DarkForestGetters_stripped.json
+      file: ./src/mapping.ts

@@ -1,22 +1,100 @@
-
-type TokenSale @entity {
+interface Artifact {
   id: ID!
-  tokenID: BigInt! #uint256
-  price: BigInt! #uint256
+  idDec: BigInt!
+  rarity: ArtifactRarity!
+  planetBiome: Biome!
+  artifactType: ArtifactType!
+  energyCapMultiplier: Int!
+  energyGrowthMultiplier: Int!
+  rangeMultiplier: Int!
+  speedMultiplier: Int!
+  defenseMultiplier: Int!
+  price: BigInt!
   round: String!
 }
 
-
-type ListedToken06R3 @entity {
-  id: ID! 
-  tokenID: BigInt! # uint256
-  price: BigInt!   # uint256
-  owner:  String! # address
+type TokenSale implements Artifact @entity {
+  "0 padded hex, no 0x prefix, recommend sorting using soldAtTimestamp"
+  id: ID!
+  "decimal version of artifact ID"
+  idDec: BigInt!
+  rarity: ArtifactRarity!
+  planetBiome: Biome!
+  artifactType: ArtifactType!
+  soldAtTimestamp: BigInt!
+  "Modifier applied to natural planet variable. Less than 100 is negative"
+  energyCapMultiplier: Int!
+  "Modifier applied to natural planet variable. Less than 100 is negative"
+  energyGrowthMultiplier: Int!
+  "Modifier applied to natural planet variable. Less than 100 is negative"
+  rangeMultiplier: Int!
+  "Modifier applied to natural planet variable. Less than 100 is negative"
+  speedMultiplier: Int!
+  "Modifier applied to natural planet variable. Less than 100 is negative"
+  defenseMultiplier: Int!
+  "Note: Eth address not Player because could be sent to non game address"
+  buyerAddress: ID!
+  price: BigInt!
+  round: String!
 }
 
-type ListedToken06R4 @entity {
-  id: ID! 
-  tokenID: BigInt! # uint256
-  price: BigInt!   # uint256
-  owner:  String! # address
+type CurrentListing implements Artifact @entity {
+  "0 padded hex, no 0x prefix, recommend sorting using listedAtTimestamp"
+  id: ID!
+  "decimal version of artifact ID"
+  idDec: BigInt!
+  rarity: ArtifactRarity!
+  planetBiome: Biome!
+  artifactType: ArtifactType!
+  listedAtTimestamp: BigInt!
+  "Modifier applied to natural planet variable. Less than 100 is negative"
+  energyCapMultiplier: Int!
+  "Modifier applied to natural planet variable. Less than 100 is negative"
+  energyGrowthMultiplier: Int!
+  "Modifier applied to natural planet variable. Less than 100 is negative"
+  rangeMultiplier: Int!
+  "Modifier applied to natural planet variable. Less than 100 is negative"
+  speedMultiplier: Int!
+  "Modifier applied to natural planet variable. Less than 100 is negative"
+  defenseMultiplier: Int!
+  "Note: Eth address not Player because could be sent to non game address"
+  sellerAddress: ID!
+  price: BigInt!  
+  round: String!
+}
+
+enum ArtifactType {
+  UNKNOWN
+  MONOLITH
+  COLOSSUS
+  SPACESHIP
+  PYRAMID
+  WORMHOLE
+  PLANETARYSHIELD
+  PHOTOIDCANNON
+  BLOOMFILTER
+  BLACKDOMAIN
+}
+
+enum Biome {
+  UNKNOWN
+  OCEAN
+  FOREST
+  GRASSLAND
+  TUNDRA
+  SWAMP
+  DESERT
+  ICE
+  WASTELAND
+  LAVA
+  CORRUPTED
+}
+
+enum ArtifactRarity {
+  UNKNOWN
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+  MYTHIC
 }
