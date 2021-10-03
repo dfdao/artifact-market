@@ -1,12 +1,20 @@
 
-type ListedToken06r3 @entity {
+type TokenSale @entity {
+  id: ID!
+  tokenID: BigInt! #uint256
+  price: BigInt! #uint256
+  round: String!
+}
+
+
+type ListedToken06R3 @entity {
   id: ID! 
   tokenID: BigInt! # uint256
   price: BigInt!   # uint256
   owner:  String! # address
 }
 
-type ListedToken06r4 @entity {
+type ListedToken06R4 @entity {
   id: ID! 
   tokenID: BigInt! # uint256
   price: BigInt!   # uint256

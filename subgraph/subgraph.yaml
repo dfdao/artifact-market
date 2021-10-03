@@ -16,8 +16,8 @@ dataSources:
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - ListedToken
-        - Listing
+        - ListedToken06R3
+        - TokenSale
       abis:
         - name: Market
           file: ./abis/Market.json
@@ -42,8 +42,8 @@ dataSources:
       language: wasm/assemblyscript
       file: ./src/mappingV2.ts
       entities:
-        - ListedToken
-        - Listing
+        - ListedToken06R4
+        - TokenSale
       abis:
         - name: MarketEvents
           file: ./abis/MarketEvents.json

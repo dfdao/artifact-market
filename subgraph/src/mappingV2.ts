@@ -1,16 +1,22 @@
 import { store } from '@graphprotocol/graph-ts'
 import { Sale, Listed, Unlisted } from '../generated/MarketEvents/MarketEvents'
-import { ListedToken06r4 } from '../generated/schema'
+import { ListedToken06R4, TokenSale} from '../generated/schema'
 
 
 export function handleSale(event: Sale): void {
     let id = event.params.id.toHexString()
-    store.remove('ListedToken06r4',id)
+    let x = event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+    let sale = new TokenSale(x)
+    sale.price = (store.get('ListedToken06R4',id) as ListedToken06R4).price
+    sale.tokenID = event.params.id
+    sale.round = '0.6 round 4'
+    sale.save()
+    store.remove('ListedToken06R4',id)
 }
 
 export function handleListed(event: Listed): void {
     let id = event.params.id.toHexString()
-    let token = new ListedToken06r4(id);
+    let token = new ListedToken06R4(id);
     token.tokenID = event.params.id
     token.owner = event.params.seller.toHexString()
     token.price = event.params.price
@@ -20,7 +26,7 @@ export function handleListed(event: Listed): void {
 
 export function handleUnlisted(event: Unlisted): void {
     let id = event.params.id.toHexString()
-    store.remove('ListedToken06r4',id)
+    store.remove('ListedToken06R4',id)
 }
 
   
