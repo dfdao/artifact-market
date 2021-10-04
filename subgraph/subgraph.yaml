@@ -31,30 +31,6 @@ dataSources:
           handler: handleBuy
       file: ./src/mappingOld.ts
   - kind: ethereum/contract
-    name: MarketFactory
-    network: xdai
-    source:
-      address: "0xd12E15f2EFE5acd79333E869930FFF0F679A46f9"
-      abi: MarketFactory
-      startBlock: 18362917 
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.5
-      language: wasm/assemblyscript
-      file: ./src/factory.ts
-      entities: 
-        - CurrentListing
-        - TokenSale
-        - Artifact
-      abis:
-        - name: MarketFactory
-          file: ./abis/MarketFactory.json
-        - name: MarketEvents
-          file: ./abis/MarketEvents.json
-      callHandlers:
-        - function: newRound(address)
-          handler: handleNewRound
-  - kind: ethereum/contract
     name: MarketEvents
     network: xdai
     source:
