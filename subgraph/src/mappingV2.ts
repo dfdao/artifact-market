@@ -24,15 +24,14 @@ export function handleSale(event: Sale): void {
 
 export function handleListed(event: Listed): void {
     
-    let tokens = DarkForestTokens.bind(Address.fromString('0x8e7Fc9c67Cf2bc5D001682d17355dc5c7f41e4C1 '))
+    let tokens = DarkForestTokens.bind(Address.fromString('0x8e7Fc9c67Cf2bc5D001682d17355dc5c7f41e4C1'))
     let rawArtifact = tokens.getArtifact(event.params.id);
 
-    let id = hexStringToPaddedUnprefixed(event.params.id.toHexString())
-    let token = new CurrentListing(id);
-    getListFromContractData(event.params.id, rawArtifact)
+    let token = getListFromContractData(event.params.id, rawArtifact)
     token.sellerAddress = event.params.seller.toHexString()
     token.price = event.params.price
     token.round = '0.6 round 4'
+    token.listedAtTimestamp = event.block.timestamp
     token.save()
 
 }
