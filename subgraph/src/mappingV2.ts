@@ -1,4 +1,4 @@
-import { store, Address, DataSourceContext, dataSource } from "@graphprotocol/graph-ts";
+import { store, Address } from "@graphprotocol/graph-ts";
 import { Sale, Listed, Unlisted } from '../generated/MarketEvents/MarketEvents'
 import { CurrentListing, TokenSale } from '../generated/schema'
 import { DarkForestTokens } from '../generated/MarketEvents/DarkForestTokens';
@@ -24,7 +24,7 @@ export function handleSale(event: Sale): void {
 
 export function handleListed(event: Listed): void {
     
-    let tokens = DarkForestTokens.bind(Address.fromString('0x95f0C147109ca7b18882bbD7Dbc636F103D27cD5'))
+    let tokens = DarkForestTokens.bind(Address.fromString('0x8e7Fc9c67Cf2bc5D001682d17355dc5c7f41e4C1 '))
     let rawArtifact = tokens.getArtifact(event.params.id);
 
     let id = hexStringToPaddedUnprefixed(event.params.id.toHexString())
