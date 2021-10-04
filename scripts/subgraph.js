@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises';
 import {CORE_CONTRACT_ADDRESS, START_BLOCK} from '@darkforest_eth/contracts'
 import * as path from 'path'
+console.log(process.argv)
 main(process.argv[2],process.argv[3])
 async function main(MARKET_CONTRACT_ADDRESS, MARKET_START_BLOCK){
 
