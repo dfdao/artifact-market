@@ -13,7 +13,7 @@ dataSources:
       startBlock: 16895824
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
         - CurrentListing
@@ -22,6 +22,8 @@ dataSources:
       abis:
         - name: Market
           file: ./abis/Market.json
+        - name: DarkForestTokens
+          file: ./abis/DarkForestTokens_stripped.json        
       callHandlers:
         - function: list(uint256,uint256)
           handler: handleList
@@ -29,17 +31,38 @@ dataSources:
           handler: handleUnlist
         - function: buy(uint256)
           handler: handleBuy
-      file: ./src/mapping.ts
+      file: ./src/mappingOld.ts
+  - kind: ethereum/contract
+    name: MarketFactory
+    network: xdai
+    source:
+      address: "0xd12E15f2EFE5acd79333E869930FFF0F679A46f9"
+      abi: MarketFactory
+      startBlock: 18362917 
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      file: ./src/mappingV2.ts
+      entities: 
+        - Market
+      abis:
+        - name: MarketFactory
+          file: ./abis/MarketFactory.json
+        - name: MarketEvents
+          file: ./abis/MarketEvents.json
+      callHandlers:
+        - function: newRound(address)
+          handler: handleNewRound
+templates:
   - kind: ethereum/contract
     name: MarketEvents
     network: xdai
     source:
-      address: "0x95f0C147109ca7b18882bbD7Dbc636F103D27cD5"
       abi: MarketEvents
-      startBlock: 18363020
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.5
       language: wasm/assemblyscript
       file: ./src/mappingV2.ts
       entities:
@@ -47,8 +70,12 @@ dataSources:
         - TokenSale
         - Artifact
       abis:
+        - name: MarketFactory
+          file: ./abis/MarketFactory.json
         - name: MarketEvents
           file: ./abis/MarketEvents.json
+        - name: DarkForestTokens
+          file: ./abis/DarkForestTokens_stripped.json
       eventHandlers:
         - event: Sale(indexed uint256,indexed address)
           handler: handleSale
@@ -56,37 +83,3 @@ dataSources:
           handler: handleListed
         - event: Unlisted(indexed uint256)
           handler: handleUnlisted
-  - kind: ethereum/contract
-    name: DarkForestCore
-    network: xdai
-    source:
-      address: "0x27a166aE00C33Bef64306760aCd7C9fD3c2fEB74"
-      abi: DarkForestCore
-      startBlock: 18361165
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.5
-      language: wasm/assemblyscript
-      abis:
-        - name: DarkForestCore
-          file: ./abis/DarkForestCore_stripped.json
-        - name: DarkForestGetters
-          file: ./abis/DarkForestGetters_stripped.json
-      file: ./src/mapping.ts
-  - kind: ethereum/contract
-    name: DarkForestCore
-    network: xdai
-    source:
-      address: "0x71340606E119de5a4dc3f1CA6bc5ec102a7fA7c0"
-      abi: DarkForestCore
-      startBlock: 17562135
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.5
-      language: wasm/assemblyscript
-      abis:
-        - name: DarkForestCore
-          file: ./abis/DarkForestCore_stripped.json
-        - name: DarkForestGetters
-          file: ./abis/DarkForestGetters_stripped.json
-      file: ./src/mapping.ts

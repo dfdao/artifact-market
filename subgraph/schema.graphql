@@ -4,11 +4,6 @@ interface Artifact {
   rarity: ArtifactRarity!
   planetBiome: Biome!
   artifactType: ArtifactType!
-  energyCapMultiplier: Int!
-  energyGrowthMultiplier: Int!
-  rangeMultiplier: Int!
-  speedMultiplier: Int!
-  defenseMultiplier: Int!
   price: BigInt!
   round: String!
 }
@@ -22,17 +17,6 @@ type TokenSale implements Artifact @entity {
   planetBiome: Biome!
   artifactType: ArtifactType!
   soldAtTimestamp: BigInt!
-  "Modifier applied to natural planet variable. Less than 100 is negative"
-  energyCapMultiplier: Int!
-  "Modifier applied to natural planet variable. Less than 100 is negative"
-  energyGrowthMultiplier: Int!
-  "Modifier applied to natural planet variable. Less than 100 is negative"
-  rangeMultiplier: Int!
-  "Modifier applied to natural planet variable. Less than 100 is negative"
-  speedMultiplier: Int!
-  "Modifier applied to natural planet variable. Less than 100 is negative"
-  defenseMultiplier: Int!
-  "Note: Eth address not Player because could be sent to non game address"
   buyerAddress: ID!
   price: BigInt!
   round: String!
@@ -47,17 +31,6 @@ type CurrentListing implements Artifact @entity {
   planetBiome: Biome!
   artifactType: ArtifactType!
   listedAtTimestamp: BigInt!
-  "Modifier applied to natural planet variable. Less than 100 is negative"
-  energyCapMultiplier: Int!
-  "Modifier applied to natural planet variable. Less than 100 is negative"
-  energyGrowthMultiplier: Int!
-  "Modifier applied to natural planet variable. Less than 100 is negative"
-  rangeMultiplier: Int!
-  "Modifier applied to natural planet variable. Less than 100 is negative"
-  speedMultiplier: Int!
-  "Modifier applied to natural planet variable. Less than 100 is negative"
-  defenseMultiplier: Int!
-  "Note: Eth address not Player because could be sent to non game address"
   sellerAddress: ID!
   price: BigInt!  
   round: String!
