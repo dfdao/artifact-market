@@ -27,7 +27,7 @@ jobs:
         run: |
           cd scripts
           yarn
-          node subgraph.js test test
+          node subgraph.js
           cd ../subgraph
           yarn
           yarn codegen

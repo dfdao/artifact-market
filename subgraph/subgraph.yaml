@@ -34,7 +34,7 @@ dataSources:
     name: MarketEvents
     network: xdai
     source:
-      address: 0x95f0C147109ca7b18882bbD7Dbc636F103D27cD5"
+      address: "0x95f0C147109ca7b18882bbD7Dbc636F103D27cD5"
       abi: MarketEvents
       startBlock: 18363020
     mapping:
@@ -60,7 +60,7 @@ dataSources:
     name: DarkForestCore
     network: xdai
     source:
-      address: 0x27a166aE00C33Bef64306760aCd7C9fD3c2fEB74
+      address: "0x27a166aE00C33Bef64306760aCd7C9fD3c2fEB74"
       abi: DarkForestCore
       startBlock: 18361165
     mapping:
@@ -72,12 +72,12 @@ dataSources:
           file: ./abis/DarkForestCore_stripped.json
         - name: DarkForestGetters
           file: ./abis/DarkForestGetters_stripped.json
-      file: ./src/mapping.  
+      file: ./src/mapping.ts
   - kind: ethereum/contract
     name: DarkForestCore
     network: xdai
     source:
-      address: 0x71340606E119de5a4dc3f1CA6bc5ec102a7fA7c0
+      address: "0x71340606E119de5a4dc3f1CA6bc5ec102a7fA7c0"
       abi: DarkForestCore
       startBlock: 17562135
     mapping:
