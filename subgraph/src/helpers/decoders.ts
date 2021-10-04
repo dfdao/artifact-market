@@ -1,8 +1,8 @@
 /* eslint-disable eqeqeq */
 import { BigInt} from '@graphprotocol/graph-ts';
-import { DarkForestTokens__getArtifactResultValue0Struct } from '../../generated/templates/MarketEvents/DarkForestTokens';
-import { DarkForestGetters__getArtifactByIdResultRetStruct } from '../../generated/Market/DarkForestGetters'
-import { TokenSale,CurrentListing } from '../../generated/schema';
+import { DarkForestTokens__getArtifactResultValue0Struct } from '../../generated/MarketEvents/DarkForestTokens';
+//import { DarkForestGetters__getArtifactByIdResultRetStruct } from '../../generated/Market/DarkForestGetters'
+import { CurrentListing } from '../../generated/schema';
 import {
   hexStringToPaddedUnprefixed,
   toArtifactRarity,
@@ -27,7 +27,7 @@ export function getListFromContractData(
   
     return artifact as CurrentListing;
 }
-
+/*
 export function getListFromGetterContractData(
   artifactIdDec: BigInt,
   rawArtifact: DarkForestGetters__getArtifactByIdResultRetStruct
@@ -44,3 +44,4 @@ export function getListFromGetterContractData(
 
   return artifact as CurrentListing;
 }
+*/

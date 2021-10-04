@@ -1,3 +1,5 @@
+#next round I will fix this... stupid
+
 specVersion: 0.0.2
 description: Dark Forest Artifact Market
 repository: https://github.com/ZK-farts/DF-market-subgraph
@@ -61,6 +63,35 @@ dataSources:
       abi: MarketEvents
       address: "0x95f0C147109ca7b18882bbD7Dbc636F103D27cD5"
       startBlock: 18363020
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      file: ./src/mappingV2.ts
+      entities:
+        - CurrentListing
+        - TokenSale
+        - Artifact
+      abis:
+        - name: MarketFactory
+          file: ./abis/MarketFactory.json
+        - name: MarketEvents
+          file: ./abis/MarketEvents.json
+        - name: DarkForestTokens
+          file: ./abis/DarkForestTokens_stripped.json
+      eventHandlers:
+        - event: Sale(indexed uint256,indexed address)
+          handler: handleSale
+        - event: Listed(indexed uint256,indexed uint256,indexed address)
+          handler: handleListed
+        - event: Unlisted(indexed uint256)
+          handler: handleUnlisted
+templates:
+  - kind: ethereum/contract
+    name: MarketEvents
+    network: xdai
+    source:
+      abi: MarketEvents
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5

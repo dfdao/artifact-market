@@ -1,9 +1,7 @@
-import { store, Address, DataSourceContext, dataSource, log } from "@graphprotocol/graph-ts";
-import { Sale, Listed, Unlisted } from '../generated/templates/MarketEvents/MarketEvents'
-import { MarketEvents } from "../generated/templates";
-import { MarketFactory , NewRoundCall } from '../generated/MarketFactory/MarketFactory'
+import { store, Address, DataSourceContext, dataSource } from "@graphprotocol/graph-ts";
+import { Sale, Listed, Unlisted } from '../generated/MarketEvents/MarketEvents'
 import { CurrentListing, TokenSale } from '../generated/schema'
-import { DarkForestTokens } from '../generated/templates/MarketEvents/DarkForestTokens';
+import { DarkForestTokens } from '../generated/MarketEvents/DarkForestTokens';
 import { getListFromContractData } from './helpers/decoders';
 import { hexStringToPaddedUnprefixed } from "./helpers/converters";
 
@@ -42,10 +40,4 @@ export function handleListed(event: Listed): void {
 export function handleUnlisted(event: Unlisted): void {
     let id = hexStringToPaddedUnprefixed(event.params.id.toHexString())
     store.remove('CurrentListing',id)
-}
-
-export function handleNewRound(tx: NewRoundCall): void{
-    let context = new DataSourceContext()
-    context.setString('tokens',tx.inputs.newTokens.toHexString())
-    MarketEvents.createWithContext(tx.inputs.newTokens,context)
 }
