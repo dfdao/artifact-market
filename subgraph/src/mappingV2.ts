@@ -24,7 +24,7 @@ export function handleSale(event: Sale): void {
 
 export function handleListed(event: Listed): void {
     
-    let tokens = DarkForestTokens.bind(Address.fromString(' 0x95f0C147109ca7b18882bbD7Dbc636F103D27cD5'))
+    let tokens = DarkForestTokens.bind(Address.fromString('0x95f0C147109ca7b18882bbD7Dbc636F103D27cD5'))
     let rawArtifact = tokens.getArtifact(event.params.id);
 
     let id = hexStringToPaddedUnprefixed(event.params.id.toHexString())
