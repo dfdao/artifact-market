@@ -25,12 +25,9 @@ jobs:
             ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd scripts
-          yarn
-          node subgraph.js
-          cd ../subgraph
+          cd subgraph
           yarn
           yarn codegen
-          yarn deploy --access-token
+          yarn deploy --access-token "$ACCESS_TOKEN"
           git commit -a -m 'new round'
           git push

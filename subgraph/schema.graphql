@@ -1,9 +1,7 @@
 interface Artifact {
   id: ID!
+  "decimal version of artifact ID"
   idDec: BigInt!
-  rarity: ArtifactRarity!
-  planetBiome: Biome!
-  artifactType: ArtifactType!
   price: BigInt!
   round: String!
 }
@@ -13,9 +11,9 @@ type TokenSale implements Artifact @entity {
   id: ID!
   "decimal version of artifact ID"
   idDec: BigInt!
-  rarity: ArtifactRarity!
-  planetBiome: Biome!
-  artifactType: ArtifactType!
+  rarity: ArtifactRarity
+  planetBiome: Biome
+  artifactType: ArtifactType
   soldAtTimestamp: BigInt!
   buyerAddress: ID!
   price: BigInt!
@@ -27,9 +25,9 @@ type CurrentListing implements Artifact @entity {
   id: ID!
   "decimal version of artifact ID"
   idDec: BigInt!
-  rarity: ArtifactRarity!
-  planetBiome: Biome!
-  artifactType: ArtifactType!
+  rarity: ArtifactRarity
+  planetBiome: Biome
+  artifactType: ArtifactType
   listedAtTimestamp: BigInt!
   sellerAddress: ID!
   price: BigInt!  

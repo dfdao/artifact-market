@@ -22,8 +22,6 @@ dataSources:
       abis:
         - name: Market
           file: ./abis/Market.json
-        - name: DarkForestTokens
-          file: ./abis/DarkForestTokens_stripped.json        
       callHandlers:
         - function: list(uint256,uint256)
           handler: handleList
@@ -45,7 +43,9 @@ dataSources:
       language: wasm/assemblyscript
       file: ./src/mappingV2.ts
       entities: 
-        - Market
+        - CurrentListing
+        - TokenSale
+        - Artifact
       abis:
         - name: MarketFactory
           file: ./abis/MarketFactory.json

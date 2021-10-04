@@ -1,6 +1,7 @@
 /* eslint-disable eqeqeq */
 import { BigInt} from '@graphprotocol/graph-ts';
-import { DarkForestTokens__getArtifactResultValue0Struct } from '../../generated/Market/DarkForestTokens';
+import { DarkForestTokens__getArtifactResultValue0Struct } from '../../generated/templates/MarketEvents/DarkForestTokens';
+import { DarkForestGetters__getArtifactByIdResultRetStruct } from '../../generated/Market/DarkForestGetters'
 import { TokenSale,CurrentListing } from '../../generated/schema';
 import {
   hexStringToPaddedUnprefixed,
@@ -10,26 +11,11 @@ import {
 } from './converters';
 
 
-
-export function getSaleFromContractData(
-  saleId: string,
-  rawArtifact: DarkForestTokens__getArtifactResultValue0Struct
-): TokenSale {
-
-  let artifact = new TokenSale(saleId);
-
-  artifact.rarity = toArtifactRarity(rawArtifact.rarity);
-  artifact.planetBiome = toBiome(rawArtifact.planetBiome);
-  artifact.artifactType = toArtifactType(rawArtifact.artifactType);
-
-  return artifact;
-}
-
 export function getListFromContractData(
     artifactIdDec: BigInt,
     rawArtifact: DarkForestTokens__getArtifactResultValue0Struct
   ): CurrentListing {
-    const artifactId = hexStringToPaddedUnprefixed(artifactIdDec.toHexString());
+    let artifactId = hexStringToPaddedUnprefixed(artifactIdDec.toHexString());
   
     let artifact = CurrentListing.load(artifactId);
     if (!artifact) artifact = new CurrentListing(artifactId);
@@ -40,4 +26,21 @@ export function getListFromContractData(
     artifact.artifactType = toArtifactType(rawArtifact.artifactType);
   
     return artifact as CurrentListing;
-  }
+}
+
+export function getListFromGetterContractData(
+  artifactIdDec: BigInt,
+  rawArtifact: DarkForestGetters__getArtifactByIdResultRetStruct
+): CurrentListing {
+  let artifactId = hexStringToPaddedUnprefixed(artifactIdDec.toHexString());
+
+  let artifact = CurrentListing.load(artifactId);
+  if (!artifact) artifact = new CurrentListing(artifactId);
+
+  artifact.idDec = artifactIdDec;
+  artifact.rarity = toArtifactRarity(rawArtifact.artifact.rarity);
+  artifact.planetBiome = toBiome(rawArtifact.artifact.planetBiome);
+  artifact.artifactType = toArtifactType(rawArtifact.artifact.artifactType);
+
+  return artifact as CurrentListing;
+}

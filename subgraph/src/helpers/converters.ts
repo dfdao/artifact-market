@@ -3,9 +3,9 @@
 // BigInt does not get 0 padded by toHexString plus gets a 0x prefix...
 export function hexStringToPaddedUnprefixed(prefixed: string): string {
   // strip 0x
-  const stripped = prefixed.substring(2, prefixed.length);
+  let stripped = prefixed.substring(2, prefixed.length);
   // pad to 64
-  const padded = stripped.padStart(64, '0');
+  let padded = stripped.padStart(64, '0');
   return padded;
 }
 
