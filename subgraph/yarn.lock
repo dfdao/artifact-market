@@ -23,6 +23,11 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
+"@darkforest_eth/contracts@6.5.6":
+  version "6.5.6"
+  resolved "https://registry.yarnpkg.com/@darkforest_eth/contracts/-/contracts-6.5.6.tgz#1ab39f8b134be7593a39d738e9de6fdd9ab65875"
+  integrity sha512-eQS6Fws1Ghkl2YOeqIrzKtFBbDC+A8t3sLQKMQrcpa8DguoqyTY23hxRiPy436tYI6JbfM31naGuwrclB5voaA==
+
 "@graphprotocol/graph-cli@0.22.1":
   version "0.22.1"
   resolved "https://registry.yarnpkg.com/@graphprotocol/graph-cli/-/graph-cli-0.22.1.tgz#9bd3e060eaa16223b2f822150a44411050cf1f77"

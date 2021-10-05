@@ -8,9 +8,9 @@ dataSources:
     name: Market
     network: xdai
     source:
-      address: "0x3Fb840EbD1fFdD592228f7d23e9CA8D55F72F2F8"
+      address: "0x1e7cb1dbC6DaD80c86e8918382107238fb4562a8"
       abi: Market
-      startBlock: 16895824
+      startBlock: 17670720
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
@@ -19,6 +19,8 @@ dataSources:
         - CurrentListing
         - TokenSale
       abis:
+        - name: DarkForestGetters
+          file: ./abis/DarkForestGetters_stripped.json        
         - name: Market
           file: ./abis/Market.json
       callHandlers:
