@@ -1,7 +1,7 @@
 /* eslint-disable eqeqeq */
 import { BigInt} from '@graphprotocol/graph-ts';
-import { DarkForestTokens__getArtifactResultValue0Struct } from '../../generated/MarketEvents/DarkForestTokens';
-//import { DarkForestGetters__getArtifactByIdResultRetStruct } from '../../generated/Market/DarkForestGetters'
+//import { DarkForestTokens__getArtifactResultValue0Struct } from '../../generated/MarketEvents/DarkForestTokens';
+import { DarkForestGetters__bulkGetArtifactsByIdsResultRetStruct } from '../../generated/MarketEvents/DarkForestGetters'
 import { CurrentListing } from '../../generated/schema';
 import {
   hexStringToPaddedUnprefixed,
@@ -10,7 +10,7 @@ import {
   toBiome
 } from './converters';
 
-
+/*
 export function getListFromContractData(
     artifactIdDec: BigInt,
     rawArtifact: DarkForestTokens__getArtifactResultValue0Struct
@@ -27,10 +27,10 @@ export function getListFromContractData(
   
     return artifact as CurrentListing;
 }
-/*
-export function getListFromGetterContractData(
+*/
+export function getListFromContractData(
   artifactIdDec: BigInt,
-  rawArtifact: DarkForestGetters__getArtifactByIdResultRetStruct
+  rawArtifact: DarkForestGetters__bulkGetArtifactsByIdsResultRetStruct[]
 ): CurrentListing {
   let artifactId = hexStringToPaddedUnprefixed(artifactIdDec.toHexString());
 
@@ -38,10 +38,9 @@ export function getListFromGetterContractData(
   if (!artifact) artifact = new CurrentListing(artifactId);
 
   artifact.idDec = artifactIdDec;
-  artifact.rarity = toArtifactRarity(rawArtifact.artifact.rarity);
-  artifact.planetBiome = toBiome(rawArtifact.artifact.planetBiome);
-  artifact.artifactType = toArtifactType(rawArtifact.artifact.artifactType);
+  artifact.rarity = toArtifactRarity(rawArtifact[0].artifact.rarity);
+  artifact.planetBiome = toBiome(rawArtifact[0].artifact.planetBiome);
+  artifact.artifactType = toArtifactType(rawArtifact[0].artifact.artifactType);
 
   return artifact as CurrentListing;
 }
-*/

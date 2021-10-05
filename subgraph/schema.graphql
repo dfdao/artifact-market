@@ -7,7 +7,6 @@ interface Artifact {
 }
 
 type TokenSale implements Artifact @entity {
-  "0 padded hex, no 0x prefix, recommend sorting using soldAtTimestamp"
   id: ID!
   "decimal version of artifact ID"
   idDec: BigInt!

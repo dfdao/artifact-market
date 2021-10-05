@@ -1,7 +1,7 @@
 import { store, Address } from "@graphprotocol/graph-ts";
 import { Sale, Listed, Unlisted } from '../generated/MarketEvents/MarketEvents'
 import { CurrentListing, TokenSale } from '../generated/schema'
-import { DarkForestTokens } from '../generated/MarketEvents/DarkForestTokens';
+import { DarkForestGetters, DarkForestGetters__getArtifactByIdResultRetStruct } from '../generated/MarketEvents/DarkForestGetters';
 import { getListFromContractData } from './helpers/decoders';
 import { hexStringToPaddedUnprefixed } from "./helpers/converters";
 
@@ -24,9 +24,8 @@ export function handleSale(event: Sale): void {
 
 export function handleListed(event: Listed): void {
     
-    let tokens = DarkForestTokens.bind(Address.fromString('0x8e7Fc9c67Cf2bc5D001682d17355dc5c7f41e4C1'))
-    let rawArtifact = tokens.getArtifact(event.params.id);
-
+    let getters = DarkForestGetters.bind(Address.fromString('0x71eF8b8D795AEbaf6dd6a2A0397B5D3A0e2B226E'))
+    let rawArtifact = getters.bulkGetArtifactsByIds([event.params.id]);
     let token = getListFromContractData(event.params.id, rawArtifact)
     token.sellerAddress = event.params.seller.toHexString()
     token.price = event.params.price
